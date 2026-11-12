@@ -3,7 +3,6 @@ import { site, projects, copy } from './content.js';
 import { applyLang, getLang, setLangStored, t } from './ui/i18n.js';
 import { createPreloader } from './ui/preloader.js';
 import { createCursor } from './ui/cursor.js';
-import { setupSensors } from './ui/sensors.js';
 
 const BASE = import.meta.env.BASE_URL;
 const $ = (s, r = document) => r.querySelector(s);
@@ -292,7 +291,7 @@ $('.project__frame').addEventListener('pointerup', (e) => {
 
 // contact form — every button on the page leads here
 const form = $('.js-form');
-const modal = makeOverlay($('.js-form-modal'), 'input[name="name"]');
+const modal = makeOverlay($('.js-form-modal'), '.js-form-close');
 document.addEventListener('click', (e) => {
   if (e.target.closest('.js-form-open, .js-p-ask')) {
     menuBtn.setAttribute('aria-expanded', 'false');
@@ -300,15 +299,41 @@ document.addEventListener('click', (e) => {
   }
 });
 $('.js-form-close').addEventListener('click', () => modal.close());
+
+/* one thing at a time: need → idea & budget → contact details */
+let step = 0;
+function showStep(n, focus = true) {
+  step = Math.max(0, Math.min(2, n));
+  $$('.step', form).forEach((el) => el.classList.toggle('is-active', +el.dataset.step === step));
+  $$('.form__bar i', form).forEach((el, i) => el.classList.toggle('is-on', i <= step));
+  $('.js-step-num').textContent = step + 1;
+  $('.js-step-back').style.visibility = step === 0 ? 'hidden' : '';
+  $('.js-step-next').hidden = step === 2;
+  $('.js-step-send').hidden = step !== 2;
+  $('.js-form-status').textContent = '';
+  if (focus && step > 0) setTimeout(() => $('.step.is-active textarea, .step.is-active input:not([type=radio])', form)?.focus(), 80);
+}
+showStep(0, false);
+$('.js-step-next').addEventListener('click', () => showStep(step + 1));
+$('.js-step-back').addEventListener('click', () => showStep(step - 1));
+// picking what you need moves straight on
+$('.js-needs').addEventListener('change', () => setTimeout(() => showStep(1), 180));
+form.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && step < 2) {
+    e.preventDefault();
+    showStep(step + 1);
+  }
+});
 modal.el.addEventListener('click', (e) => e.target === modal.el && modal.close());
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const status = $('.js-form-status');
+  if (step < 2) return showStep(step + 1);
   if (!form.checkValidity()) {
     form.reportValidity();
     return;
   }
-  const data = Object.fromEntries(new FormData(form));
+  const data = { need: '', budget: '', message: '', ...Object.fromEntries(new FormData(form)) };
   const f = copy[lang].form;
   if (!site.formEndpoint) {
     const body = `${data.message}\n\n${f.need}: ${data.need}\n${f.budget}: ${data.budget}\n\n— ${data.name}${data.company ? ' (' + data.company + ')' : ''}\n${data.email}`;
@@ -325,6 +350,7 @@ form.addEventListener('submit', async (e) => {
     if (!r.ok) throw new Error(r.status);
     status.textContent = f.thanks;
     form.reset();
+    setTimeout(() => showStep(0, false), 2500);
   } catch {
     status.textContent = f.error;
   }
@@ -363,7 +389,7 @@ const ndc = (e) => [(e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight)
 addEventListener('pointermove', (e) => {
   if (!stage) return;
   const [x, y] = ndc(e);
-  if (e.pointerType === 'mouse') stage.setPointer(x, y);
+  stage.setPointer(x, y);
   const hit = e.target.closest(UI) ? null : stage.pick(x, y);
   stage.setHovered(hit !== null);
   cursor.setLabel(hit === null ? '' : hit === 'contact' ? t(lang, 'cta') : t(lang, 'view'));
@@ -403,7 +429,8 @@ async function boot() {
         projects,
         sheets: projects.map((p) => `${BASE}projects/${p.slug}/${mobile ? 'm.jpg' : p.images[0]}`),
         contactSheet: contactSheet(mobile),
-        name: site.name,
+        name: site.nameLines,
+        face: `${BASE}face.jpg`,
         mobile,
         reducedMotion: reduced,
         onProgress: (p) => preloader.set(0.2 + p * 0.78),
@@ -411,10 +438,6 @@ async function boot() {
       stage.onActive = (i) => setActive(i);
       stage.start();
       if (debug) window.__stage = stage;
-      setupSensors((x, y) => {
-        stage.gyro = true;
-        stage.setPointer(x, y);
-      });
     } catch (err) {
       console.error(err);
       stage = null;

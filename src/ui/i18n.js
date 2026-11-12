@@ -67,8 +67,10 @@ export function applyLang(lang) {
 
   const chips = (name, list, checked) =>
     list.map((x, i) => `<label><input type="radio" name="${name}" value="${esc(x)}" ${i === checked ? 'checked' : ''}/><span>${esc(x)}</span></label>`).join('');
-  $('.js-needs').innerHTML = chips('need', c.form.needs, 0);
+  $('.js-needs').innerHTML = chips('need', c.form.needs, -1);
   $('.js-budgets').innerHTML = chips('budget', c.form.budgets, c.form.budgets.length - 1);
+
+  all('.js-step-title', (el, i) => (el.textContent = c.form.steps[i]));
 
   const ls = $('.js-lang');
   ls.hidden = site.languages.length < 2;

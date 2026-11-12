@@ -8,9 +8,10 @@
    ========================================================================== */
 
 export const site = {
-  name: 'KEBRON', // ⟨TODO⟩ steht riesig hinter der Figur – kurz ist besser
-  fullName: 'Kebron K.', // ⟨TODO⟩
-  email: 'hello@example.com', // ⟨TODO⟩
+  // Die großen Wörter hinter der Figur, untereinander
+  nameLines: ['KEBRON', 'DEVELOPER', 'DESIGNER'],
+  fullName: 'Kebron.g', // Logo oben links
+  email: 'kebron.kg@gmail.com',
   // Formular-Backend (z. B. https://formspree.io). Leer = Formular öffnet das Mailprogramm.
   formEndpoint: '',
   year: new Date().getFullYear(),
@@ -75,6 +76,9 @@ export const copy = {
     timeLabel: 'Ortszeit',
     form: {
       title: 'Projekt anfragen',
+      steps: ['Was brauchst du?', 'Worum geht es?', 'Wohin darf ich antworten?'],
+      next: 'Weiter',
+      back: 'Zurück',
       name: 'Name',
       email: 'E-Mail',
       company: 'Unternehmen / Marke (optional)',
@@ -82,13 +86,12 @@ export const copy = {
       needs: ['Neue Website', 'Relaunch', 'Online-Shop', 'Branding', 'Noch unklar'],
       budget: 'Budget',
       budgets: ['bis 2.000 €', '2.000–5.000 €', '5.000–10.000 €', '10.000 € +', 'noch offen'], // ⟨TODO⟩
-      message: 'Worum geht es?',
+      message: 'Ein, zwei Sätze genügen',
       send: 'Anfrage senden',
       sending: 'Wird gesendet …',
       thanks: 'Danke! Ich melde mich in Kürze.',
       error: 'Das hat nicht geklappt. Schreib mir gern direkt per Mail.',
     },
-    sensors: { text: 'Darf sich die Figur mit deinem Handy mitbewegen?', allow: 'Ja', decline: 'Nein' },
   },
 
   en: {
@@ -141,6 +144,9 @@ export const copy = {
     timeLabel: 'Local time',
     form: {
       title: 'Start a project',
+      steps: ['What do you need?', 'What’s it about?', 'Where can I reply?'],
+      next: 'Next',
+      back: 'Back',
       name: 'Name',
       email: 'Email',
       company: 'Company / brand (optional)',
@@ -148,13 +154,12 @@ export const copy = {
       needs: ['New website', 'Relaunch', 'Online shop', 'Branding', 'Not sure yet'],
       budget: 'Budget',
       budgets: ['up to €2,000', '€2,000–5,000', '€5,000–10,000', '€10,000 +', 'open'],
-      message: 'What’s it about?',
+      message: 'One or two sentences are enough',
       send: 'Send enquiry',
       sending: 'Sending …',
       thanks: 'Thank you! I’ll be in touch shortly.',
       error: 'That didn’t work. Feel free to email me directly.',
     },
-    sensors: { text: 'May the figure move with your phone?', allow: 'Yes', decline: 'No' },
   },
 };
 

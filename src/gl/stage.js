@@ -31,9 +31,9 @@ const MAX_T = 9;
 
 /* Palettes per scene: paper white · soft rosé · black */
 const PAL = {
-  white: { bg: '#fbf7f5', ink: '#0b0b0c', fill: '#fbf7f5', name: '#f3c3d0', grid: 0.07 },
-  rose: { bg: '#f3c3d0', ink: '#0b0b0c', fill: '#f3c3d0', name: '#f8dbe3', grid: 0.09 },
-  black: { bg: '#0b0b0c', ink: '#f3c3d0', fill: '#0b0b0c', name: '#1c1517', grid: 0.1 },
+  white: { bg: '#fdfbfb', ink: '#0b0b0c', fill: '#fdfbfb', name: '#f6cfe1', grid: 0.06 },
+  rose: { bg: '#f6cfe1', ink: '#0b0b0c', fill: '#ffffff', name: '#fbe6ef', grid: 0.0 },
+  black: { bg: '#0b0b0c', ink: '#f6cfe1', fill: '#0b0b0c', name: '#1c1517', grid: 0.1 },
 };
 const SCENE_PAL = { hero: 'white', work: 'rose', about: 'white', contact: 'black' };
 
@@ -58,6 +58,7 @@ const COMPOSITE_FRAG = /* glsl */ `
   uniform vec3 uFill;
   uniform vec3 uNameCol;
   uniform float uGridA;
+  uniform float uNegative;
   uniform vec4 uNameRect;   // x, y, w, h in screen uv
   uniform float uNameOn;
   uniform float uMaxT;
@@ -119,7 +120,7 @@ const COMPOSITE_FRAG = /* glsl */ `
     } else if (figHit) {
       // halftone: one square per cell, bigger where the form is darker
       float lum = fig.r;
-      float ink = mix(.2, 1., pow(1. - lum, 1.25));
+      float ink = mix(.2, 1., pow(mix(1. - lum, lum * .5 + .1, uNegative), 1.25));
       float half_ = sqrt(ink) * .5;
       float sq = 1. - smoothstep(half_ - .06, half_ + .02, max(abs(cuv.x), abs(cuv.y)));
       col = mix(uFill, uInk, sq);
@@ -130,29 +131,30 @@ const COMPOSITE_FRAG = /* glsl */ `
   }
 `;
 
-function nameTexture(text) {
+/* the big words behind the giant, one below the other */
+function nameTexture(lines) {
   const c = document.createElement('canvas');
   c.width = 2048;
-  c.height = 512;
+  c.height = 1024;
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, c.width, c.height);
-  let size = 470;
+  const lh = c.height / lines.length;
+  let size = lh * 1.12;
   ctx.font = `900 ${size}px "Doto", monospace`;
-  const w = ctx.measureText(text).width;
-  if (w > 1980) size *= 1980 / w;
+  const w = Math.max(...lines.map((l) => ctx.measureText(l).width));
+  if (w > 2030) size *= 2030 / w;
   ctx.font = `900 ${size}px "Doto", monospace`;
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff';
-  ctx.fillText(text, 1024, 270);
+  lines.forEach((l, i) => ctx.fillText(l, 4, lh * (i + 0.5) + size * 0.04));
   const t = new CanvasTexture(c);
   t.minFilter = LinearFilter;
   t.generateMipmaps = false;
-  return { tex: t, aspect: (Math.min(w, 1980) * (size / 470 > 1 ? 1 : 1)) / (size * 0.78) };
+  return t;
 }
 
-export async function createStage({ canvas, projects, sheets, contactSheet, name, mobile, reducedMotion, onProgress }) {
+export async function createStage({ canvas, projects, sheets, contactSheet, name, face, mobile, reducedMotion, onProgress }) {
   const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
   renderer.outputColorSpace = SRGBColorSpace;
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -215,6 +217,8 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
       uBreath: { value: 0 },
       uCurl: { value: 0.2 },
       uMaxT: { value: MAX_T },
+      tFace: { value: null },
+      uFaceOn: { value: 0 },
     },
     vertexShader: VERT,
     fragmentShader: FIGURE_FRAG,
@@ -227,7 +231,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
       ...camU,
       tFig: { value: null },
       tSheet: { value: texes[0] },
-      tName: { value: nameTex.tex },
+      tName: { value: nameTex },
       uRes: { value: new Vector2(1, 1) },
       uCell: { value: 8 },
       uGrid: { value: new Vector2(1, 1) },
@@ -241,6 +245,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
       uFill: { value: cur.fill },
       uNameCol: { value: cur.name },
       uGridA: { value: cur.grid },
+      uNegative: { value: 0 },
       uNameRect: { value: [0, 0, 1, 1] },
       uNameOn: { value: 1 },
       uMaxT: { value: MAX_T },
@@ -252,6 +257,14 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
     depthTest: false,
     depthWrite: false,
   });
+  if (face) {
+    loader.load(face, (t) => {
+      t.minFilter = LinearFilter;
+      t.generateMipmaps = false;
+      figMat.uniforms.tFace.value = t;
+      figMat.uniforms.uFaceOn.value = 1;
+    });
+  }
   const quad = new Mesh(new PlaneGeometry(2, 2), figMat);
   const scene = new Scene();
   scene.add(quad);
@@ -268,7 +281,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
     const s = new Vector2();
     renderer.getDrawingBufferSize(s);
     // cell size: ~7.5 CSS px on desktop, ~5.5 on phones → the figure's "resolution"
-    cellPx = Math.max(3, Math.round((mobile ? 5.2 : Math.max(6, w / 190)) * (s.x / w)));
+    cellPx = Math.max(2, Math.round((mobile ? 4 : Math.max(5, w / 250)) * (s.x / w)));
     const gx = Math.ceil(s.x / cellPx);
     const gy = Math.ceil(s.y / cellPx);
     rt.setSize(gx, gy);
@@ -300,6 +313,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
     pan: 0,
     dolly: 0,
     nameOn: 1,
+    pointerAt: -10,
   };
 
   const R = new Vector3(),
@@ -366,7 +380,10 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
       } else low = 0;
     }
 
-    state.ps.lerp(state.pointer, Math.min(1, dt * 4));
+    // nobody moving a pointer (phones, or a resting mouse): the giant looks around on his own
+    const idle = time - state.pointerAt > 3.5;
+    if (idle) state.pointer.set(Math.sin(time * 0.42) * 0.45, Math.sin(time * 0.27 + 1) * 0.25);
+    state.ps.lerp(state.pointer, Math.min(1, dt * (idle ? 1.2 : 4)));
 
     // ---- which sheet, and where in its cycle
     let want = -1,
@@ -379,7 +396,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
       want = CONTACT;
       s = Math.min(0.8, state.contact * 1.15); // comes up and stays
     }
-    const r = rig.update(reducedMotion ? 0.05 : dt, time, want, s, state.ps, want === CONTACT ? (mobile ? 0.3 : 0.24) : 0);
+    const r = rig.update(reducedMotion ? 0.05 : dt, time, want, s, state.ps, want === CONTACT ? (mobile ? 0.2 : 0.24) : 0);
 
     // sheet texture follows what is actually on the paper
     const shown = r.shown;
@@ -407,14 +424,20 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
     cur.name.lerp(tc.set(pal.name), k);
     cur.grid += (pal.grid - cur.grid) * k;
     compMat.uniforms.uGridA.value = cur.grid;
+    compMat.uniforms.uNegative.value += ((pal === PAL.black ? 1 : 0) - compMat.uniforms.uNegative.value) * k;
     api.scene = SCENE_PAL[state.section] || 'white';
 
     // big name behind the figure (hero only)
     const nameT = state.section === 'hero' ? 1 - smooth(0.5, 0.95, state.hero) : 0;
     state.nameOn += (nameT - state.nameOn) * Math.min(1, dt * 5);
-    const nw = wide ? 0.94 : 0.96;
-    const nh = (nw * cam.aspect) / 4;
-    compMat.uniforms.uNameRect.value = [0.5 - nw / 2 - state.ps.x * 0.012, (wide ? 0.6 : 0.7) - nh / 2 + state.hero * 0.12, nw, nh];
+    let nw = wide ? 0.72 : 0.92;
+    let nh = nw * cam.aspect * 0.5;
+    if (nh > 0.62) {
+      nh = 0.62;
+      nw = nh / (cam.aspect * 0.5);
+    }
+    const nx = wide ? 0.03 : 0.5 - nw / 2;
+    compMat.uniforms.uNameRect.value = [nx - state.ps.x * 0.012, (wide ? 0.53 : 0.73) - nh / 2 + state.hero * 0.1, nw, nh];
     compMat.uniforms.uNameOn.value = state.nameOn;
 
     // intro
@@ -471,6 +494,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, name
     },
     setPointer(x, y) {
       state.pointer.set(x, y);
+      state.pointerAt = time;
     },
     /* index of the project whose sheet is under the point, or 'contact', or null */
     pick(x, y) {

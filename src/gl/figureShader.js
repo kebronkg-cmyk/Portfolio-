@@ -26,6 +26,8 @@ export const FIGURE_FRAG = /* glsl */ `
   uniform float uBreath;
   uniform float uCurl;
   uniform float uMaxT;
+  uniform sampler2D tFace;
+  uniform float uFaceOn;
 
   const vec3 PIVOT = vec3(0., -1.7, 0.);
   const vec3 NECK = vec3(0., -.05, -.02);
@@ -65,28 +67,37 @@ export const FIGURE_FRAG = /* glsl */ `
     return q + PIVOT;
   }
 
-  float sdHead(vec3 q) {
+  vec3 toHead(vec3 q) {
     vec3 h = q - NECK;
     h.xz = rot(uHead.x) * h.xz;
     h.yz = rot(-uHead.y) * h.yz;
-    h += NECK;
-    float bound = length(h - vec3(0., .36, 0.)) - .62;
-    if (bound > .25) return bound;
-    float d = sdEll(h - vec3(0., .36, -.02), vec3(.36, .44, .40));
-    d = smin(d, sdEll(h - vec3(0., .48, -.10), vec3(.38, .38, .42)), .08);
-    d = smin(d, sdEll(h - vec3(0., .08, .07), vec3(.25, .24, .28)), .16);
-    d = smin(d, sdEll(h - vec3(0., .00, .17), vec3(.11, .08, .12)), .08);
-    d = smin(d, sdEll(h - vec3(0., .26, .37), vec3(.055, .11, .08)), .05);   // nose
-    d = smin(d, sdEll(h - vec3(0., .42, .29), vec3(.27, .05, .08)), .06);    // brow
-    vec3 m = vec3(abs(h.x), h.y, h.z);
-    d = smax(d, -sdEll(m - vec3(.13, .335, .37), vec3(.085, .05, .08)), .05); // eye sockets
-    d = smin(d, length(m - vec3(.13, .335, .285)) - .045, .02);
-    d = smin(d, sdEll(m - vec3(.17, .22, .23), vec3(.09, .07, .08)), .07);    // cheekbones
-    d = smin(d, sdEll(m - vec3(.355, .30, -.02), vec3(.04, .10, .07)), .03);  // ears
-    d = smin(d, sdEll(h - vec3(0., .10, .31), vec3(.10, .025, .05)), .03);
-    d = smin(d, sdEll(h - vec3(0., .055, .30), vec3(.085, .022, .05)), .03);
-    d = smax(d, -sdEll(h - vec3(0., .078, .35), vec3(.09, .006, .05)), .01);
+    return h + NECK;
+  }
+  // the afro: a soft, slightly bumpy volume around the skull, open at the face
+  float sdHair(vec3 h) {
+    float d = sdEll(h - vec3(0., .6, -.1), vec3(.52, .47, .5));
+    d += .014 * sin(h.x * 38.) * sin(h.y * 41.) * sin(h.z * 36.);
+    d = smax(d, -sdEll(h - vec3(0., .26, .5), vec3(.33, .5, .52)), .06);
     return d;
+  }
+  float sdSkull(vec3 h) {
+    float d = sdEll(h - vec3(0., .36, -.02), vec3(.335, .43, .39));
+    d = smin(d, sdEll(h - vec3(0., .06, .06), vec3(.235, .26, .27)), .16);    // jaw
+    d = smin(d, sdEll(h - vec3(0., -.07, .15), vec3(.115, .1, .12)), .08);   // chin + goatee
+    d = smin(d, sdEll(h - vec3(0., .25, .36), vec3(.06, .11, .08)), .05);    // nose
+    d = smin(d, sdEll(h - vec3(0., .43, .28), vec3(.26, .045, .08)), .06);   // brow
+    vec3 m = vec3(abs(h.x), h.y, h.z);
+    d = smax(d, -sdEll(m - vec3(.125, .345, .37), vec3(.08, .04, .07)), .05); // eye sockets
+    d = smin(d, sdEll(m - vec3(.16, .21, .23), vec3(.085, .07, .08)), .07);   // cheekbones
+    d = smin(d, sdEll(m - vec3(.335, .29, -.02), vec3(.035, .09, .06)), .03); // ears
+    d = min(d, length(m - vec3(.34, .2, .0)) - .028);                          // ear studs
+    return d;
+  }
+  float sdHead(vec3 q) {
+    vec3 h = toHead(q);
+    float bound = length(h - vec3(0., .45, -.03)) - .74;
+    if (bound > .25) return bound;
+    return min(sdSkull(h), sdHair(h));
   }
 
   float sdHand(vec3 p, int i) {
@@ -122,8 +133,6 @@ export const FIGURE_FRAG = /* glsl */ `
     float d = sdEll(q - vec3(0., -.95, .02), vec3(.78, .47, .33));
     d = smin(d, sdEll(q - vec3(0., -1.75, 0.), vec3(.56, .95, .3)), .25);
     d = smin(d, sdEll(q - vec3(0., -.6, .01), vec3(.42, .17, .2)), .2);
-    // chest plate seam: a shallow groove makes it read as built, not grown
-    d = smax(d, -(abs(q.y + 1.22 - abs(q.x) * .12) - .012), .02);
     // neck with two rings
     float neck = sdCap(q, vec3(0., -.52, .02), vec3(0., .02, -.01), .165);
     neck += .012 * smoothstep(.02, .0, abs(fract(q.y * 9. + .3) - .5) - .22);
@@ -165,7 +174,35 @@ export const FIGURE_FRAG = /* glsl */ `
     float rim = max(dot(n, normalize(vec3(.75, .15, -.65))), 0.);
     float fres = pow(1. - max(dot(n, -rd), 0.), 3.);
     float ao = clamp(map(p + n * .12) / .12, 0., 1.);
-    float lum = clamp((.07 + dif * .86 + rim * .42 + fres * .2) * mix(.45, 1., ao), 0., 1.);
+    float shade = clamp((.07 + dif * .86 + rim * .42 + fres * .2) * mix(.45, 1., ao), 0., 1.);
+
+    // ---- what did we hit? skin, hair, jacket or the white shirt
+    vec3 q = toBody(p);
+    vec3 h = toHead(q);
+    float dHands = min(sdHand(p, 0), sdHand(p, 1));
+    float lum;
+    if (dHands < .02) {
+      lum = shade * .45;                                   // hands: skin
+    } else if (q.y > -.56 && length(q.xz) < .75) {
+      if (sdHair(h) < sdSkull(h) + .004) {
+        lum = .03 + shade * .1;                            // hair: almost solid
+      } else if (length(vec3(abs(h.x), h.y, h.z) - vec3(.34, .2, 0.)) < .04) {
+        lum = 1.;                                          // ear studs catch the light
+      } else {
+        // the photo, projected straight onto the face
+        vec2 fuv = vec2(.5 + h.x / .99, .5 + (h.y - .256) / .99);
+        float photo = texture2D(tFace, fuv).r;
+        float inFace = smoothstep(.33, .27, abs(h.x)) * smoothstep(.02, .14, h.z) * smoothstep(-.3, -.2, h.y) * uFaceOn;
+        lum = mix(shade * .42, pow(photo, 1.75) * (.8 + .2 * dif), inFace);
+      }
+    } else {
+      // jacket, open over a white shirt
+      float open = .1 + .09 * smoothstep(-.6, -1.5, q.y);
+      float shirt = smoothstep(open + .02, open - .02, abs(q.x)) * step(0., q.z) * step(q.y, -.55);
+      float zip = smoothstep(.03, .0, abs(abs(q.x) - open - .03)) * step(0., q.z);
+      lum = mix(shade * .36, .78 + shade * .22, shirt);
+      lum = mix(lum, .06, zip * (1. - shirt) * .7);
+    }
     float dn = clamp(t / uMaxT, 0., 1.) * 65535.;
     float hi = floor(dn / 256.);
     gl_FragColor = vec4(lum, hi / 255., (dn - hi * 256.) / 255., 1.);

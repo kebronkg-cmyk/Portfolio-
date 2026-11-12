@@ -159,27 +159,36 @@
     <div class="modal js-form-modal" aria-hidden="true" role="dialog" aria-modal="true">
       <form class="form js-form" novalidate>
         <div class="form__head">
-          <h2 data-i18n="form.title"></h2>
+          <p class="label"><span data-i18n="form.title"></span> — <b class="js-step-num">1</b>/3</p>
           <button type="button" class="x js-form-close"><span data-i18n="close"></span><i aria-hidden="true"></i></button>
         </div>
-        <fieldset><legend data-i18n="form.need"></legend><div class="form__chips js-needs"></div></fieldset>
-        <div class="form__row">
+        <div class="form__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+
+        <fieldset class="step" data-step="0">
+          <legend class="step__title js-step-title"></legend>
+          <div class="form__chips form__chips--big js-needs"></div>
+        </fieldset>
+
+        <fieldset class="step" data-step="1">
+          <legend class="step__title js-step-title"></legend>
+          <label><span data-i18n="form.message"></span><textarea name="message" rows="3"></textarea></label>
+          <div class="form__group"><span class="form__cap" data-i18n="form.budget"></span><div class="form__chips js-budgets"></div></div>
+        </fieldset>
+
+        <fieldset class="step" data-step="2">
+          <legend class="step__title js-step-title"></legend>
           <label><span data-i18n="form.name"></span><input name="name" required autocomplete="name" /></label>
           <label><span data-i18n="form.email"></span><input name="email" type="email" required autocomplete="email" /></label>
-        </div>
-        <label><span data-i18n="form.company"></span><input name="company" autocomplete="organization" /></label>
-        <fieldset><legend data-i18n="form.budget"></legend><div class="form__chips js-budgets"></div></fieldset>
-        <label><span data-i18n="form.message"></span><textarea name="message" rows="3" required></textarea></label>
+          <label><span data-i18n="form.company"></span><input name="company" autocomplete="organization" /></label>
+        </fieldset>
+
         <div class="form__foot">
-          <button class="btn" type="submit"><span data-i18n="form.send"></span><i class="arrow" aria-hidden="true"></i></button>
+          <button type="button" class="form__back js-step-back"><i class="arrow arrow--left" aria-hidden="true"></i><span data-i18n="form.back"></span></button>
           <p class="form__status js-form-status" role="status"></p>
+          <button type="button" class="btn js-step-next"><span data-i18n="form.next"></span><i class="arrow" aria-hidden="true"></i></button>
+          <button class="btn js-step-send" type="submit"><span data-i18n="form.send"></span><i class="arrow" aria-hidden="true"></i></button>
         </div>
       </form>
-    </div>
-
-    <div class="sensors" aria-hidden="true">
-      <p data-i18n="sensors.text"></p>
-      <div><button class="js-sensors-allow" data-i18n="sensors.allow"></button><button class="js-sensors-decline" data-i18n="sensors.decline"></button></div>
     </div>
 
     <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>

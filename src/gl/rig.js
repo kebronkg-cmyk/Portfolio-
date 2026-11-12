@@ -59,7 +59,7 @@ export function createRig({ mobile }) {
         idle: pose([0, -2.3, 0.45], [-0.75, 0, 0], 0.0, 0.0),
         park: pose([0, -2.3, 0.45], [-0.75, 0, 0], 0.3, 0.42),
         hold: pose([0, -0.78, 0.7], [-0.45, 0.12, 0.06], 0.06, 0.36),
-        show: pose([0, -0.5, 1.35], [-0.1, -0.03, -0.012], -0.02, 0.06),
+        show: pose([0, -0.4, 1.42], [-0.08, -0.03, -0.012], -0.02, 0.06),
       }
     : {
         idle: pose([0, -2.15, 0.45], [-0.75, 0, 0], 0.0, 0.0),
@@ -70,12 +70,12 @@ export function createRig({ mobile }) {
 
   /* scroll → where the sheet wants to be, for one "show a sheet" cycle (s: 0..1) */
   function cycle(s) {
-    if (s < 0.1) return mixPose(P.idle, P.park, ease(s / 0.1)); // look down, lean in
-    if (s < 0.4) return mixPose(P.park, P.hold, easeOut((s - 0.1) / 0.3)); // pull it up
-    if (s < 0.48) return P.hold; // a beat: look at it
-    if (s < 0.72) return mixPose(P.hold, P.show, easeInOut((s - 0.48) / 0.24)); // hold it out
-    if (s < 0.9) return P.show;
-    return mixPose(P.show, P.park, ease((s - 0.9) / 0.1)); // and down again
+    if (s < 0.08) return mixPose(P.idle, P.park, ease(s / 0.08)); // look down, lean in
+    if (s < 0.34) return mixPose(P.park, P.hold, easeOut((s - 0.08) / 0.26)); // pull it up
+    if (s < 0.4) return P.hold; // a beat: look at it
+    if (s < 0.6) return mixPose(P.hold, P.show, easeInOut((s - 0.4) / 0.2)); // hold it out
+    if (s < 0.91) return P.show; // long plateau: this is where people read
+    return mixPose(P.show, P.park, ease((s - 0.91) / 0.09)); // and down again
   }
 
   const sp = {

@@ -8,9 +8,10 @@
    Tokens — paper white · soft rosé · black. Flat colours only.
    ========================================================================== */
 :root {
-  --paper: #fbf7f5;
-  --rose: #f3c3d0;
-  --rose-deep: #e79bb2;
+  --paper: #fdfbfb;
+  --white: #ffffff;
+  --rose: #f6cfe1;
+  --rose-deep: #eaa4c4;
   --black: #0b0b0c;
   --wine: #7a1f3d; /* the one extra colour: hover, focus, small marks */
 
@@ -185,6 +186,9 @@ img {
 }
 html[data-scene='black'] .btn:hover {
   color: var(--black);
+}
+.btn[hidden] {
+  display: none;
 }
 .btn:active {
   transform: scale(0.98);
@@ -1328,4 +1332,265 @@ body.has-pick {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* ==========================================================================
+   Refinements: white accents on rosé, white project card, stepped form
+   ========================================================================== */
+html[data-scene='rose'] {
+  --line: rgba(255, 255, 255, 0.85);
+  --mark: var(--white);
+}
+html[data-scene='rose'] .btn:hover {
+  background: var(--white);
+  color: var(--black);
+}
+html[data-scene='rose'] .header__cta i {
+  background: var(--white);
+}
+html[data-scene='rose'] .lang button[aria-pressed='true'] {
+  background: var(--white);
+  color: var(--black);
+}
+
+/* project list: the active row becomes a white strip */
+.work__list button {
+  padding: 9px 10px;
+}
+.work__list li.is-active button {
+  background: var(--white);
+  padding-left: 10px;
+}
+.work__list button::after {
+  background: var(--black);
+}
+
+/* project card: a small white label, black button */
+.work__card {
+  background: var(--white);
+  color: var(--black);
+  padding: 18px;
+  border-radius: 2px;
+  --muted: color-mix(in srgb, var(--black) 62%, var(--white));
+}
+.work__card .btn {
+  background: var(--black);
+  color: var(--white);
+}
+.work__card .btn:hover {
+  background: var(--wine);
+  color: var(--white);
+}
+
+/* menu: white rules and a white info box on the rosé sheet */
+.menu__nav li {
+  border-top-color: var(--white);
+}
+.menu__nav li:last-child {
+  border-bottom: 1px solid var(--white);
+}
+.menu__status {
+  background: var(--white);
+  padding: 16px;
+  width: 100%;
+}
+.menu .x i::before,
+.menu .x i::after {
+  background: var(--black);
+}
+
+/* about rows: rosé rules on white */
+html[data-scene='white'] .rows li {
+  border-color: var(--rose);
+}
+html[data-scene='white'] .rows--num i {
+  background: var(--rose);
+  padding: 0 4px;
+  width: fit-content;
+}
+
+/* ---------- stepped form ---------- */
+.form {
+  gap: 0;
+  min-height: 420px;
+  grid-template-rows: auto auto 1fr auto;
+}
+.form__head {
+  margin-bottom: 14px;
+}
+.form__bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 26px;
+}
+.form__bar i {
+  height: 6px;
+  background: var(--rose);
+  position: relative;
+  overflow: hidden;
+}
+.form__bar i::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--black);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease);
+}
+.form__bar i.is-on::after {
+  transform: none;
+}
+.form .step {
+  display: none;
+  gap: 18px;
+  align-content: start;
+}
+.form .step.is-active {
+  display: grid;
+  animation: step-in 0.45s var(--ease) both;
+}
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(22px);
+  }
+}
+.step__title {
+  font-family: var(--font-body);
+  font-weight: 640;
+  font-size: clamp(26px, 3.2vw, 36px);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-transform: none;
+  color: var(--black);
+  margin-bottom: 18px !important;
+}
+.form__chips--big {
+  display: grid;
+  gap: 6px;
+}
+.form__chips--big span {
+  padding: 15px 16px;
+  font-size: 17px;
+  font-weight: 520;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.form__chips--big span::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--rose);
+  transition: background-color 0.15s, transform 0.3s var(--ease);
+}
+.form__chips--big label:hover span::after {
+  background: var(--black);
+  transform: rotate(90deg);
+}
+.form__chips--big input:checked + span::after {
+  background: var(--rose);
+}
+.form__group {
+  display: grid;
+  gap: 8px;
+}
+.form__cap {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.form__foot {
+  margin-top: 26px;
+  justify-content: space-between;
+}
+.form__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.form__back:hover {
+  color: var(--black);
+}
+.form__status {
+  flex: 1;
+}
+
+/* ---------- phones: less on screen, the sheet stays fully visible ---------- */
+@media (max-width: 860px) {
+  .header__cta span {
+    display: none;
+  }
+  .header__cta {
+    width: 40px;
+    justify-content: center;
+  }
+  .hero__left,
+  .hero__right,
+  .about__step {
+    border-top: 0;
+  }
+  .hero__left .label {
+    display: none;
+  }
+  .hero__title {
+    margin-top: 0;
+  }
+  .work__head .label {
+    display: none;
+  }
+  .work__count {
+    font-size: 44px;
+  }
+  .work__card {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-top: 0;
+    padding: 12px 12px 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+  .work__name {
+    font-size: 19px;
+    margin: 0;
+  }
+  .work__card .label {
+    font-size: 10px;
+    grid-column: 1;
+  }
+  .work__info {
+    display: none;
+  }
+  .work__card .btn {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    height: 44px;
+  }
+  .form {
+    min-height: 0;
+  }
+  .step__title {
+    font-size: 26px;
+  }
+  .form__chips--big span {
+    padding: 13px 14px;
+    font-size: 16px;
+  }
+  .menu__status {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* the mail address lives in the footer; the line above it only added noise */
+.contact__mail {
+  display: none;
 }

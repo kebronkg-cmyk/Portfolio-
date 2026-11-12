@@ -195,10 +195,15 @@ export function createScreens({ projects, textures, mobile }) {
         uniforms.uHover.value += (h - uniforms.uHover.value) * Math.min(1, dt * 8);
         const a = active === i ? 1 : 0;
         uniforms.uActive.value += (a - uniforms.uActive.value) * Math.min(1, dt * 5);
-        // idle float
+        // idle float + swing aside when the camera flies past
         const b = mesh.userData.base;
-        mesh.position.y = b.y + Math.sin(time * 0.8 + i * 1.7) * 0.06;
-        mesh.rotation.y = b.ry + Math.sin(time * 0.5 + i) * 0.02;
+        const side = b.x === 0 ? (i % 2 === 0 ? -1 : 1) : Math.sign(b.x);
+        const pass = Math.min(1, Math.max(0, (5.5 - d) / 5.5));
+        const pe = pass * pass * (3 - 2 * pass);
+        mesh.position.x = b.x + side * pe * (mobile ? 3.2 : 5.2);
+        mesh.position.y = b.y + Math.sin(time * 0.8 + i * 1.7) * 0.06 + pe * 0.6;
+        mesh.rotation.y = b.ry + Math.sin(time * 0.5 + i) * 0.02 - side * pe * 1.1;
+        mesh.visible = d > -2;
       });
     },
   };

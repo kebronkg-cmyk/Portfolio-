@@ -31,6 +31,8 @@ export const site = {
     { label: 'behance', url: '' },
     { label: 'github', url: 'https://github.com/' },
   ],
+  // ⟨TODO⟩ Zeitzone für die Uhr im Menü
+  timezone: 'Europe/Berlin',
   // Porträt (Hero). Wenn die Datei fehlt, wird die generierte Büste genutzt.
   portrait: 'portrait.jpg',
   // Optional: Hintergrund des Fotos automatisch entfernen (nur sinnvoll, wenn
@@ -80,6 +82,11 @@ export const copy = {
     imprint: 'impressum',
     privacy: 'datenschutz',
     nav: ['start', 'arbeiten', 'über mich', 'kontakt'],
+    statusLabel: 'status',
+    status: 'offen für neue projekte', // ⟨TODO⟩
+    timeLabel: 'ortszeit',
+    basedLabel: 'standort',
+    based: 'Deutschland · weltweit remote', // ⟨TODO⟩
     form: {
       title: 'Projekt anfragen',
       name: 'Name',
@@ -142,6 +149,11 @@ export const copy = {
     imprint: 'imprint',
     privacy: 'privacy',
     nav: ['home', 'work', 'about', 'contact'],
+    statusLabel: 'status',
+    status: 'available for new projects',
+    timeLabel: 'local time',
+    basedLabel: 'based in',
+    based: 'Germany · remote worldwide',
     form: {
       title: 'Start a project',
       name: 'Name',

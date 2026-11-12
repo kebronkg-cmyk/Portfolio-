@@ -53,6 +53,10 @@ export async function createStage({ canvas, projects, textures, portraitUrl, key
 
   onProgress?.(0.25, 'sampling portrait');
   const portrait = await createPortrait({ url: portraitUrl, keyOut, mobile });
+  if (mobile) {
+    portrait.group.scale.setScalar(0.86);
+    portrait.group.position.y -= 0.25;
+  }
   scene.add(portrait.group);
 
   onProgress?.(0.55, 'tuning screens');
@@ -253,7 +257,7 @@ export async function createStage({ canvas, projects, textures, portraitUrl, key
     w[3] = s3;
     emblem.uniforms.uW.value.set(w[0], w[1], w[2], w[3]);
     emblem.uniforms.uOpacity.value = smooth(0.0, 0.25, a);
-    emblem.uniforms.uScatter.value = (1 - smooth(0.05, 0.3, a)) * 3 + Math.abs(state.velocity) * 0.4;
+    emblem.uniforms.uScatter.value = (1 - smooth(0.0, 0.16, a)) * 3 + Math.min(1.5, Math.abs(state.velocity) * 0.03);
     const shift = mobile ? 0 : a < 0.42 ? 1.6 : a < 0.72 ? -1.6 : 0;
     emblem.points.position.x += (shift * (1 - s3) - emblem.points.position.x) * Math.min(1, dt * 2.5);
     emblem.points.position.z = lerp(aboutZ, contactZ, s3);

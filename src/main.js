@@ -55,7 +55,14 @@ $('.js-card-total').textContent = String(projects.length).padStart(2, '0');
    --------------------------------------------------------------------------- */
 const lenis = new Lenis({ lerp: reduced ? 1 : 0.09, wheelMultiplier: 0.9, touchMultiplier: 1.4, smoothWheel: !reduced });
 lenis.stop();
-if (debug) window.__lenis = lenis;
+if (debug) {
+  window.__lenis = lenis;
+  // jump to a section progress: __goto('about', .5)
+  window.__goto = (name, p) => {
+    const s = sections.find((x) => x.name === name);
+    lenis.scrollTo(s.top + s.len * p, { immediate: true });
+  };
+}
 const sections = $$('.sec').map((el) => ({ el, name: el.dataset.section, top: 0, len: 1 }));
 function measure() {
   const vh = innerHeight;
@@ -214,6 +221,19 @@ function closeMenu() {
   lastFocus?.focus?.();
 }
 menuBtn.addEventListener('click', openMenu);
+const clock = $('.js-clock');
+const tick = () => {
+  try {
+    clock.textContent =
+      new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: site.timezone }).format(new Date()) +
+      ' · ' +
+      site.timezone.split('/').pop().replace('_', ' ');
+  } catch {
+    clock.textContent = new Date().toLocaleTimeString();
+  }
+};
+tick();
+setInterval(tick, 1000);
 $('.js-menu-close').addEventListener('click', closeMenu);
 
 // project overlay

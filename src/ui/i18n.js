@@ -1,6 +1,7 @@
 import { site, copy, projects } from '../content.js';
 
 const KEY = 'portfolio-lang';
+const pad = (n) => String(n).padStart(2, '0');
 
 export function getLang() {
   let l = null;
@@ -26,85 +27,50 @@ export function t(lang, key) {
   return get(copy[lang], key) ?? get(copy[site.defaultLanguage], key) ?? '';
 }
 
-/* Fill every static text of the page for a language. */
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+/* Fill every text of the page for a language. */
 export function applyLang(lang) {
   const c = copy[lang];
+  const $ = (s) => document.querySelector(s);
+  const all = (s, fn) => document.querySelectorAll(s).forEach(fn);
   document.documentElement.lang = lang;
   document.title = c.metaTitle;
-  document.querySelector('meta[name="description"]')?.setAttribute('content', c.metaDescription);
+  $('meta[name="description"]')?.setAttribute('content', c.metaDescription);
 
-  document.querySelectorAll('[data-i18n]').forEach((el) => {
-    el.textContent = t(lang, el.dataset.i18n);
-  });
+  all('[data-i18n]', (el) => (el.textContent = t(lang, el.dataset.i18n)));
+  all('.js-name, .js-fullname', (el) => (el.textContent = site.fullName));
+  all('.js-year', (el) => (el.textContent = site.year));
+  all('.js-about-label', (el, i) => (el.textContent = c.aboutLabel[i]));
 
-  document.querySelectorAll('.js-name').forEach((el) => {
-    el.textContent = site.name;
-    el.dataset.text = site.name;
-  });
-  document.querySelectorAll('.js-name-plain').forEach((el) => (el.textContent = site.name));
-  document.querySelectorAll('.js-year').forEach((el) => (el.textContent = site.year));
-  const yc = document.querySelector('.js-year-code');
-  if (yc) yc.textContent = '0' + site.year;
+  const email = $('.js-email');
+  email.textContent = site.email;
+  email.href = 'mailto:' + site.email;
 
-  const email = document.querySelector('.js-email');
-  if (email) {
-    email.textContent = site.email;
-    email.href = 'mailto:' + site.email;
-  }
-
-  // services chips
-  const svc = document.querySelector('.js-services');
-  if (svc) svc.innerHTML = c.services.map((s) => `<li>${s}</li>`).join('');
-
-  // contact headline (one line per entry)
-  const ct = document.querySelector('.js-contact-title');
-  if (ct) ct.innerHTML = c.contactTitle.map((l) => `<span>${l}</span>`).join('');
-
-  // work list
-  const list = document.querySelector('.js-work-list');
-  if (list)
-    list.innerHTML = projects
-      .map(
-        (p, i) =>
-          `<li data-index="${i}"><button data-index="${i}">[${String(i + 1).padStart(2, '0')}] ${p.title}</button></li>`,
-      )
-      .join('');
-
-  // menu nav
-  const nav = document.querySelector('.js-menu-nav');
-  const targets = ['#top', '#work', '#about', '#contact'];
-  if (nav)
-    nav.innerHTML = c.nav
-      .map(
-        (label, i) =>
-          `<li><a href="${targets[i]}" style="--i:${i}" data-nav="${targets[i]}">${label}<small>${String(i + 1).padStart(2, '0')}</small></a></li>`,
-      )
-      .join('');
-
-  // socials
-  const socials = site.socials.filter((s) => s.url);
-  const mail = { label: 'mail', url: 'mailto:' + site.email };
-  const socialHtml = [...socials, mail]
-    .map(
-      (s) =>
-        `<li><a href="${s.url}" ${s.url.startsWith('http') ? 'target="_blank" rel="noopener"' : ''} class="glitch-hover">${s.label}</a></li>`,
-    )
+  $('.js-work-list').innerHTML = projects
+    .map((p, i) => `<li data-index="${i}"><button data-index="${i}"><span>${pad(i + 1)}&ensp;${esc(p.title)}</span></button></li>`)
     .join('');
-  document.querySelectorAll('.js-socials, .js-menu-social').forEach((el) => (el.innerHTML = socialHtml));
+  $('.js-sectors').innerHTML = c.sectors.map(([a, b]) => `<li><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join('');
+  $('.js-process').innerHTML = c.process.map(([a, b], i) => `<li><i>${pad(i + 1)}</i><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join('');
+  $('.js-contact-title').textContent = c.contactTitle.join(' ');
 
-  // budget chips
-  const b = document.querySelector('.js-budgets');
-  if (b)
-    b.innerHTML = c.form.budgets
-      .map((x, i) => `<label><input type="radio" name="budget" value="${x}" ${i === 1 ? 'checked' : ''}/><span>${x}</span></label>`)
-      .join('');
+  const targets = ['#top', '#work', '#about', '#contact'];
+  $('.js-menu-nav').innerHTML = c.nav
+    .map((label, i) => `<li><a href="${targets[i]}" style="--i:${i}">${esc(label)}<small>${pad(i + 1)}</small></a></li>`)
+    .join('');
 
-  // language switch
-  const ls = document.querySelector('.js-lang');
-  if (ls) {
-    ls.hidden = site.languages.length < 2;
-    ls.innerHTML = site.languages
-      .map((l) => `<button data-lang="${l}" aria-pressed="${l === lang}">${l}</button>`)
-      .join('');
-  }
+  const socials = [...site.socials.filter((s) => s.url), { label: 'E-Mail', url: 'mailto:' + site.email }];
+  const socialHtml = socials
+    .map((s) => `<li><a href="${s.url}" ${s.url.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>${esc(s.label)}</a></li>`)
+    .join('');
+  all('.js-socials, .js-menu-social', (el) => (el.innerHTML = socialHtml));
+
+  const chips = (name, list, checked) =>
+    list.map((x, i) => `<label><input type="radio" name="${name}" value="${esc(x)}" ${i === checked ? 'checked' : ''}/><span>${esc(x)}</span></label>`).join('');
+  $('.js-needs').innerHTML = chips('need', c.form.needs, 0);
+  $('.js-budgets').innerHTML = chips('budget', c.form.budgets, c.form.budgets.length - 1);
+
+  const ls = $('.js-lang');
+  ls.hidden = site.languages.length < 2;
+  ls.innerHTML = site.languages.map((l) => `<button data-lang="${l}" aria-pressed="${l === lang}">${l}</button>`).join('');
 }

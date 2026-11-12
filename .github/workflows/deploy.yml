@@ -1,5 +1,11 @@
 name: Deploy to GitHub Pages
 
+# Publishes two versions side by side:
+#   /      → version 1 (frozen at the commit below)
+#   /v2/   → the current state of the pushed branch
+env:
+  V1_REF: 41fb9ad
+
 on:
   push:
     branches: [main, 'claude/**']
@@ -19,15 +25,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+      - name: Build current version (v2)
+        run: |
+          npm ci
+          npm run build
+          mkdir -p _site
+          mv dist _site/v2
+      - name: Build frozen version 1
+        run: |
+          git worktree add ../v1 "$V1_REF"
+          cd ../v1
+          npm ci
+          npm run build
+          cp -r dist/. "$GITHUB_WORKSPACE/_site/"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: _site
 
   deploy:
     needs: build

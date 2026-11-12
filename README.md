@@ -1,12 +1,11 @@
 # Portfolio
 
-Scroll-getriebene WebGL-Portfolio-Seite im Röhrenmonitor-/Terminal-Look.
-Inspiriert vom Niveau von fojcikdominik.com – eigenständig umgesetzt.
+Scroll-getriebene Portfolio-Seite: Ein verpixelter Riese zieht die Website-Entwürfe wie
+Blätter von unten ins Bild und hält sie dem Besucher hin. Weiß, Rosé, Schwarz.
 
-**Live-Vorschau:** [kebronkg-cmyk.github.io/Portfolio-](https://kebronkg-cmyk.github.io/Portfolio-/)
-
-- **Was ich mir angeschaut habe und wie ich vorgegangen bin:** [`ANALYSE.md`](ANALYSE.md)
-- **Was ich von dir brauche:** [`BRIEFING.md`](BRIEFING.md)
+- **Aktuelle Version:** [kebronkg-cmyk.github.io/Portfolio-/v2/](https://kebronkg-cmyk.github.io/Portfolio-/v2/)
+- **Version 1 (eingefroren):** [kebronkg-cmyk.github.io/Portfolio-/](https://kebronkg-cmyk.github.io/Portfolio-/)
+- Analyse der Referenz: [`ANALYSE.md`](ANALYSE.md) · Was noch fehlt: [`BRIEFING.md`](BRIEFING.md)
 
 ## Lokal starten
 
@@ -23,8 +22,7 @@ Fast alles steht in **`src/content.js`**: Name, Texte (DE/EN), Links, Projekte.
 
 | Datei | Zweck |
 |---|---|
-| `public/portrait.jpg` | Dein Porträt (fehlt es, wird eine generierte Büste gezeigt) |
-| `public/projects/<slug>/*.jpg` | Projektbilder, in `content.js` bei `images` eintragen |
+| `public/projects/<slug>/` | `01.jpg` = Blatt am Desktop (quer), `m.jpg` = Blatt am Handy (hoch), weitere für die Galerie |
 | `impressum.html`, `datenschutz.html` | Rechtliches (Vorlagen, bitte ausfüllen) |
 | `public/og.jpg` | Vorschaubild beim Teilen (WhatsApp, LinkedIn …) |
 
@@ -32,19 +30,14 @@ Fast alles steht in **`src/content.js`**: Name, Texte (DE/EN), Links, Projekte.
 
 ```
 src/
-  content.js        ← Inhalte
-  main.js           ← Scroll, Overlays, Formular, Boot
-  styles/main.css   ← Design-Tokens, Layout, Responsive
-  ui/               ← Preloader, Cursor, Sprache, Sensoren, Text-Scramble
-  gl/               ← WebGL-Szene (Three.js)
-    stage.js        ← Renderer, Kamerafahrt, Theme-Wechsel
-    post.js         ← CRT-Shader (Fisheye, Scanlines, RGB, Glitch, Grain)
-    portrait.js     ← Punktmatrix-Porträt (+ bust.js als Platzhalter)
-    screens.js      ← gewölbte Projekt-Bildschirme
-    covers.js       ← generierte Platzhalter-Cover
-    tunnel.js       ← Drahtgitter-Raum
-    floorText.js    ← Terminal-Text am Boden
-    emblem.js       ← Morph-Punktwolke (About/Kontakt)
+  content.js          ← Inhalte (Texte DE/EN, Projekte, Links)
+  main.js             ← Scroll, Overlays, Formular, Boot
+  styles/main.css     ← Farben, Layout, Responsive
+  ui/                 ← Preloader, Cursor, Sprache, Sensoren
+  gl/
+    figureShader.js   ← der Riese: Kopf, Rumpf, Arme, Hände (Raymarching, sehr niedrige Auflösung)
+    rig.js            ← „Skelett“: Blatt-Choreografie, Federn, Arm-IK, Kopf, Atmung
+    stage.js          ← Kamera, Farbwelten, Raster-Druck (ein Quadrat pro Pixel), Blatt
 ```
 
 - Kein WebGL? → Die Seite zeigt automatisch eine statische Variante.

@@ -1,243 +1,214 @@
 /* ==========================================================================
    CONTENT — alles, was du ändern willst, steht hier.
    --------------------------------------------------------------------------
-   • Texte sind zweisprachig (de / en). Wenn du nur eine Sprache willst,
-     setze `languages: ['de']`.
-   • Alles, was mit  ⟨TODO⟩  markiert ist, sind Platzhalter, die ich von dir
-     brauche (siehe BRIEFING.md).
-   • Projektbilder: lege sie unter /public/projects/<slug>/ ab und trage die
-     Dateinamen bei `images` ein. Solange `images` leer ist, generiert die
-     Seite automatisch Platzhalter-Cover im passenden Stil.
-   • Porträt: lege ein Foto als /public/portrait.jpg ab (siehe BRIEFING.md).
-     Solange keins da ist, wird eine generierte 3D-Büste angezeigt.
+   • Texte sind zweisprachig (de / en). Nur eine Sprache? → `languages: ['de']`
+   • ⟨TODO⟩ = bitte prüfen / ersetzen (siehe BRIEFING.md)
+   • Projektbilder liegen unter /public/projects/<slug>/
+       01.jpg = Blatt am Desktop (quer) · m.jpg = Blatt am Handy (hoch)
    ========================================================================== */
 
 export const site = {
-  // ⟨TODO⟩ Dein Name, so wie er groß auf der Seite stehen soll
-  name: 'KEBRON K.',
-  shortName: 'KEBRON',
-  // ⟨TODO⟩ echte Adresse
-  email: 'hello@example.com',
-  // Falls du ein Formular-Backend willst (z. B. https://formspree.io → kostenlos),
-  // trage hier die Endpoint-URL ein. Leer = Formular öffnet das Mailprogramm.
+  name: 'KEBRON', // ⟨TODO⟩ steht riesig hinter der Figur – kurz ist besser
+  fullName: 'Kebron K.', // ⟨TODO⟩
+  email: 'hello@example.com', // ⟨TODO⟩
+  // Formular-Backend (z. B. https://formspree.io). Leer = Formular öffnet das Mailprogramm.
   formEndpoint: '',
   year: new Date().getFullYear(),
   languages: ['de', 'en'],
   defaultLanguage: 'de',
-  // ⟨TODO⟩ deine Profile – leere Einträge werden ausgeblendet
-  socials: [
-    { label: 'instagram', url: 'https://www.instagram.com/' },
-    { label: 'linkedin', url: 'https://www.linkedin.com/' },
-    { label: 'behance', url: '' },
-    { label: 'github', url: 'https://github.com/' },
-  ],
-  // ⟨TODO⟩ Zeitzone für die Uhr im Menü
   timezone: 'Europe/Berlin',
-  // Porträt (Hero). Wenn die Datei fehlt, wird die generierte Büste genutzt.
-  portrait: 'portrait.jpg',
-  // Optional: Hintergrund des Fotos automatisch entfernen (nur sinnvoll, wenn
-  // das Foto vor einem ruhigen, dunklen ODER hellen Hintergrund gemacht wurde)
-  portraitKeyOut: 'auto', // 'auto' | 'dark' | 'light' | 'none'
+  socials: [
+    { label: 'Instagram', url: 'https://www.instagram.com/' }, // ⟨TODO⟩
+    { label: 'LinkedIn', url: '' },
+    { label: 'GitHub', url: 'https://github.com/kebronkg-cmyk' },
+  ],
 };
 
 export const copy = {
   de: {
-    metaTitle: `${site.name} — Design & Entwicklung`,
+    metaTitle: `${site.fullName} — Webdesign, das Anfragen bringt`,
     metaDescription:
-      'Unabhängiger Designer & Creative Developer. Websites mit Haltung – Motion, 3D und Details, die hängen bleiben.',
+      'Webdesign & Entwicklung aus München. Maßgeschneiderte Websites für Gastronomie, Salons, Praxen, Kunst und Tech – eigenständig im Auftritt, gebaut für Anfragen.',
     skip: 'Zum Inhalt springen',
-    letsTalk: 'let’s talk',
-    menu: 'menü',
-    close: 'schließen',
-    loading: 'lädt',
-    portfolio: '// portfolio',
-    heroLine:
-      'Unabhängiger Designer & Creative Developer. Ich baue Websites, die man nicht wegscrollt.',
-    scrollHint: 'scrollen',
-    selectedWork: 'Ausgewählte Arbeiten',
-    info: 'Info',
-    role: 'Rolle',
-    year: 'Jahr',
-    openProject: 'Projekt öffnen',
-    project: 'Projekt',
-    visit: 'live ansehen',
-    aboutLabel: 'über mich',
-    aboutTitle: 'Ich gestalte Websites, an die man sich erinnert.',
-    aboutText:
-      'Die meisten Websites sehen entweder gut aus oder laufen gut. Ich baue welche, die beides können – mit Motion, 3D und einer Liebe zum Detail, die man auf jedem Gerät spürt.',
-    clientsLabel: 'mit wem ich arbeite',
-    clientsTitle: 'Gründer:innen, Studios, Künstler:innen.',
-    clientsText:
-      'Ob Start-up, Agentur oder Solo-Künstler:in – jede Seite wird um ihren Markt und das Problem herum gebaut, das sie lösen soll. Kein Template. Keine Abkürzung.',
-    servicesLabel: 'was ich mache',
-    services: ['Webdesign', 'Creative Development', 'Motion & Interaction', 'WebGL / 3D', 'Art Direction', 'Branding'],
-    learnMore: 'mehr erfahren',
-    contactLabel: 'kontakt',
-    contactTitle: ['lass uns über', 'dein nächstes', 'projekt reden.'],
-    contactSub: 'Kurzes Formular ausfüllen – ich melde mich innerhalb von 24 Stunden.',
-    contactCta: 'projekt anfragen',
-    orEmail: 'oder schreib direkt an',
-    scrollBack: 'nach oben',
-    rights: 'alle rechte vorbehalten',
-    imprint: 'impressum',
-    privacy: 'datenschutz',
-    nav: ['start', 'arbeiten', 'über mich', 'kontakt'],
-    statusLabel: 'status',
-    status: 'offen für neue projekte', // ⟨TODO⟩
-    timeLabel: 'ortszeit',
-    basedLabel: 'standort',
-    based: 'Deutschland · weltweit remote', // ⟨TODO⟩
+    cta: 'Projekt anfragen',
+    menu: 'Menü',
+    close: 'Schließen',
+    role: 'Webdesign & Entwicklung — München', // ⟨TODO⟩ Standort prüfen
+    heroTitle: 'Ich baue Websites, die man sich merkt. Und die Kundschaft bringen.',
+    heroText: 'Kein Baukasten, keine Vorlage. Jede Seite entsteht für genau ein Geschäft – und für das, was sie dort leisten soll.',
+    scrollHint: 'Scrollen',
+
+    workLabel: 'Arbeiten',
+    workHint: 'Blatt antippen zum Ansehen',
+    view: 'Ansehen',
+    visit: 'Live ansehen',
+    image: 'Bild',
+
+    aboutLabel: ['Ansatz', 'Für wen', 'Ablauf'],
+    approachTitle: 'Schön allein verkauft nichts. Schnell allein vergisst man.',
+    approachText: 'Ich baue beides in eine Seite: einen Auftritt, der nach dir aussieht, Technik, die auf jedem Handy sofort da ist, und einen klaren Weg zur Anfrage.',
+    sectorsTitle: 'Für jedes Geschäft eine eigene Seite.',
+    sectors: [
+      ['Gastronomie', 'Tische füllen, nicht nur die Karte zeigen.'],
+      ['Salons & Beauty', 'Termine, bevor jemand weiterscrollt.'],
+      ['Praxis & Coaching', 'Vertrauen, noch vor dem ersten Gespräch.'],
+      ['Kunst & Kultur', 'Eine Bühne, die nach dir aussieht.'],
+      ['Tech & Start-ups', 'Ein komplexes Produkt, in Sekunden verstanden.'],
+    ],
+    processTitle: 'In drei Schritten online.',
+    process: [
+      ['Kennenlernen', 'Ein kurzes Gespräch: Ziel, Zielgruppe, Rahmen.'],
+      ['Entwurf', 'Du siehst früh eine klickbare Richtung und redest mit.'],
+      ['Launch', 'Die Seite geht live – und ich bleibe ansprechbar.'],
+    ],
+
+    contactTitle: ['Erzähl mir von', 'deinem Projekt.'],
+    contactSub: 'Ein paar Angaben genügen. Ich antworte persönlich.',
+    contactHint: 'Blatt antippen',
+    orEmail: 'Oder direkt per Mail:',
+    scrollBack: 'Nach oben',
+    imprint: 'Impressum',
+    privacy: 'Datenschutz',
+    nav: ['Start', 'Arbeiten', 'Ansatz', 'Kontakt'],
+    statusLabel: 'Status',
+    status: 'Nimmt Projekte an', // ⟨TODO⟩
+    timeLabel: 'Ortszeit',
     form: {
       title: 'Projekt anfragen',
       name: 'Name',
       email: 'E-Mail',
-      company: 'Firma / Marke (optional)',
+      company: 'Unternehmen / Marke (optional)',
+      need: 'Was brauchst du?',
+      needs: ['Neue Website', 'Relaunch', 'Online-Shop', 'Branding', 'Noch unklar'],
       budget: 'Budget',
-      budgets: ['< 3k €', '3–8k €', '8–15k €', '15k € +', 'weiß ich noch nicht'],
-      message: 'Worum geht’s?',
-      send: 'absenden',
-      sending: 'sendet …',
-      thanks: 'Danke! Ich melde mich in den nächsten 24 Stunden.',
-      error: 'Das hat nicht geklappt. Schreib mir gerne direkt per Mail.',
+      budgets: ['bis 2.000 €', '2.000–5.000 €', '5.000–10.000 €', '10.000 € +', 'noch offen'], // ⟨TODO⟩
+      message: 'Worum geht es?',
+      send: 'Anfrage senden',
+      sending: 'Wird gesendet …',
+      thanks: 'Danke! Ich melde mich in Kürze.',
+      error: 'Das hat nicht geklappt. Schreib mir gern direkt per Mail.',
     },
-    sensors: {
-      text: 'Diese Seite würde gern deine',
-      strong: 'Bewegungs- & Lagesensoren',
-      text2: 'nutzen.',
-      allow: 'erlauben',
-      decline: 'ablehnen',
-    },
+    sensors: { text: 'Darf sich die Figur mit deinem Handy mitbewegen?', allow: 'Ja', decline: 'Nein' },
   },
 
   en: {
-    metaTitle: `${site.name} — Design & Development`,
+    metaTitle: `${site.fullName} — Web design that brings in enquiries`,
     metaDescription:
-      'Independent designer & creative developer. Websites with an attitude – motion, 3D and details that stick.',
+      'Web design & development from Munich. Tailor-made websites for restaurants, salons, practices, art and tech – distinctive to look at, built for enquiries.',
     skip: 'Skip to content',
-    letsTalk: 'let’s talk',
-    menu: 'menu',
-    close: 'close',
-    loading: 'loading',
-    portfolio: '// portfolio',
-    heroLine: 'Independent designer & creative developer. I build websites people don’t scroll past.',
-    scrollHint: 'scroll',
-    selectedWork: 'Selected work',
-    info: 'Info',
-    role: 'Role',
-    year: 'Year',
-    openProject: 'Open project',
-    project: 'Project',
-    visit: 'visit live',
-    aboutLabel: 'about me',
-    aboutTitle: 'I design websites people remember.',
-    aboutText:
-      'Most websites either look stunning or run well. I build ones that do both – packed with motion, 3D and a love for detail you can feel on every device.',
-    clientsLabel: 'who i work with',
-    clientsTitle: 'Founders, studios, artists.',
-    clientsText:
-      'Start-up, agency or solo artist – every site is shaped around its market and the problem it needs to solve. No templates. No shortcuts.',
-    servicesLabel: 'what i do',
-    services: ['Web Design', 'Creative Development', 'Motion & Interaction', 'WebGL / 3D', 'Art Direction', 'Branding'],
-    learnMore: 'learn more',
-    contactLabel: 'contact',
-    contactTitle: ['let’s talk about', 'your next', 'project.'],
-    contactSub: 'Fill in a quick form and I’ll get back to you within 24 hours.',
-    contactCta: 'start a project',
-    orEmail: 'or write directly to',
-    scrollBack: 'scroll back',
-    rights: 'all rights reserved',
-    imprint: 'imprint',
-    privacy: 'privacy',
-    nav: ['home', 'work', 'about', 'contact'],
-    statusLabel: 'status',
-    status: 'available for new projects',
-    timeLabel: 'local time',
-    basedLabel: 'based in',
-    based: 'Germany · remote worldwide',
+    cta: 'Start a project',
+    menu: 'Menu',
+    close: 'Close',
+    role: 'Web design & development — Munich',
+    heroTitle: 'I build websites people remember. And that bring in customers.',
+    heroText: 'No site builder, no template. Every site is made for exactly one business – and for what it has to do there.',
+    scrollHint: 'Scroll',
+
+    workLabel: 'Work',
+    workHint: 'Tap the sheet to view',
+    view: 'View',
+    visit: 'Visit live',
+    image: 'Image',
+
+    aboutLabel: ['Approach', 'Who for', 'Process'],
+    approachTitle: 'Pretty alone sells nothing. Fast alone is forgotten.',
+    approachText: 'I build both into one site: a presence that looks like you, engineering that is instantly there on every phone, and a clear path to the enquiry.',
+    sectorsTitle: 'A site of its own for every business.',
+    sectors: [
+      ['Restaurants', 'Fill tables, don’t just show the menu.'],
+      ['Salons & beauty', 'Appointments before anyone scrolls on.'],
+      ['Practice & coaching', 'Trust, before the first conversation.'],
+      ['Art & culture', 'A stage that looks like you.'],
+      ['Tech & start-ups', 'A complex product, understood in seconds.'],
+    ],
+    processTitle: 'Online in three steps.',
+    process: [
+      ['Intro', 'A short call: goal, audience, frame.'],
+      ['Draft', 'You see a clickable direction early and have a say.'],
+      ['Launch', 'The site goes live – and I stay reachable.'],
+    ],
+
+    contactTitle: ['Tell me about', 'your project.'],
+    contactSub: 'A few details are enough. I reply personally.',
+    contactHint: 'Tap the sheet',
+    orEmail: 'Or email me directly:',
+    scrollBack: 'Back to top',
+    imprint: 'Imprint',
+    privacy: 'Privacy',
+    nav: ['Home', 'Work', 'Approach', 'Contact'],
+    statusLabel: 'Status',
+    status: 'Taking on projects',
+    timeLabel: 'Local time',
     form: {
       title: 'Start a project',
       name: 'Name',
       email: 'Email',
       company: 'Company / brand (optional)',
+      need: 'What do you need?',
+      needs: ['New website', 'Relaunch', 'Online shop', 'Branding', 'Not sure yet'],
       budget: 'Budget',
-      budgets: ['< 3k €', '3–8k €', '8–15k €', '15k € +', 'not sure yet'],
+      budgets: ['up to €2,000', '€2,000–5,000', '€5,000–10,000', '€10,000 +', 'open'],
       message: 'What’s it about?',
-      send: 'send',
-      sending: 'sending …',
-      thanks: 'Thanks! I’ll get back to you within 24 hours.',
+      send: 'Send enquiry',
+      sending: 'Sending …',
+      thanks: 'Thank you! I’ll be in touch shortly.',
       error: 'That didn’t work. Feel free to email me directly.',
     },
-    sensors: {
-      text: 'This website would like to use your',
-      strong: 'motion & orientation',
-      text2: 'sensors.',
-      allow: 'allow',
-      decline: 'decline',
-    },
+    sensors: { text: 'May the figure move with your phone?', allow: 'Yes', decline: 'No' },
   },
 };
 
 /* --------------------------------------------------------------------------
-   PROJEKTE
-   • slug: Ordnername unter /public/projects/
-   • images: z. B. ['01.jpg', '02.jpg'] – erstes Bild = Cover im 3D-Raum
-   • palette: Farben für die generierten Platzhalter (solange keine Bilder da sind)
+   PROJEKTE — nur die stärksten Ausschnitte.
+   ⟨TODO⟩ Bitte bestätigen, dass du diese Seiten öffentlich zeigen darfst.
    -------------------------------------------------------------------------- */
 export const projects = [
   {
-    slug: 'nocturne',
-    title: 'NOCTURNE RECORDS',
+    slug: 'antica',
+    title: 'Antica',
+    kind: { de: 'Caffè · Pizza · Bar', en: 'Caffè · Pizza · Bar' },
     year: '2026',
-    url: '',
-    role: ['Design', 'Development', 'Motion'],
-    images: [],
-    palette: ['#0b0b0f', '#ff4d2e', '#f2efe9'],
-    kicker: 'LISTEN AFTER DARK',
+    url: 'https://antica-pizza.pages.dev/',
+    images: ['01.jpg', '02.jpg', '03.jpg'],
     info: {
-      de: '⟨TODO⟩ Platzhalter. Independent-Label mit einem Webauftritt, der sich wie Plattendrehen anfühlt – WebGL-Vinyl, Scroll-Scratching und ein Shop, der verkauft.',
-      en: '⟨TODO⟩ Placeholder. Independent label with a site that feels like spinning records – WebGL vinyl, scroll scratching and a shop that sells.',
+      de: 'Die Pizza spielt die Hauptrolle: Sie dreht sich durchs Sortiment, Karte und Anruf bleiben immer einen Tipp entfernt.',
+      en: 'The pizza plays the lead: it spins through the range while menu and phone stay one tap away.',
     },
   },
   {
-    slug: 'atelier-mono',
-    title: 'ATELIER MONO',
+    slug: 'vierwinde',
+    title: 'Weg der vier Winde',
+    kind: { de: 'Praxis für Energiearbeit', en: 'Energy work practice' },
     year: '2026',
-    url: '',
-    role: ['Art Direction', 'Design'],
-    images: [],
-    palette: ['#e9e6df', '#121212', '#2f5bff'],
-    kicker: 'OBJECTS FOR QUIET ROOMS',
+    url: 'https://wegdervierwinde.de/',
+    images: ['01.jpg', '02.jpg', '03.jpg'],
     info: {
-      de: '⟨TODO⟩ Platzhalter. Möbel-Atelier aus Berlin. Ein ruhiges, editoriales Design mit taktilen Mikro-Interaktionen und 3D-Objektansichten.',
-      en: '⟨TODO⟩ Placeholder. Furniture atelier from Berlin. A calm, editorial design with tactile micro-interactions and 3D object views.',
+      de: 'Hell, ruhig, persönlich. Die Seite nimmt sich Zeit zum Erklären und führt Schritt für Schritt zum Kennenlern-Gespräch.',
+      en: 'Bright, calm, personal. The site takes its time to explain and leads step by step to the first conversation.',
     },
   },
   {
-    slug: 'helio',
-    title: 'HELIO ENERGY',
-    year: '2025',
-    url: '',
-    role: ['Design', 'Development', 'WebGL'],
-    images: [],
-    palette: ['#06140f', '#c6ff3d', '#e8fff0'],
-    kicker: 'POWER THAT GROWS',
+    slug: 'irmonhair',
+    title: 'Irmonhair',
+    kind: { de: 'Friseur & Extensions', en: 'Hair salon & extensions' },
+    year: '2026',
+    url: 'https://imronhair.pages.dev/',
+    images: ['01.jpg', '02.jpg', '03.jpg'],
     info: {
-      de: '⟨TODO⟩ Platzhalter. Climate-Tech-Start-up. Interaktive Datenvisualisierung eines Solarparks in Echtzeit, gebaut für die Series-A-Präsentation.',
-      en: '⟨TODO⟩ Placeholder. Climate-tech start-up. Interactive real-time data visualisation of a solar farm, built for the Series A pitch.',
+      de: 'Zwei Salons, ein Auftritt: Extensions-Berater, Preise und Terminbuchung ohne Umwege – im Look des Salons.',
+      en: 'Two salons, one presence: an extensions guide, prices and booking without detours – in the look of the salon.',
     },
   },
   {
-    slug: 'kollektiv',
-    title: 'KOLLEKTIV 19',
-    year: '2025',
-    url: '',
-    role: ['Development', 'Motion'],
-    images: [],
-    palette: ['#14002e', '#ff5cf0', '#ffe14d'],
-    kicker: 'ART IS A VERB',
+    slug: 'omer',
+    title: 'Omer’s Hair',
+    kind: { de: 'Fünf Salons', en: 'Five salons' },
+    year: '2026',
+    url: 'https://kebronkg-cmyk.github.io/Omer-s-Hair/',
+    images: ['01.jpg', '02.jpg', '03.jpg'],
     info: {
-      de: '⟨TODO⟩ Platzhalter. Künstler:innen-Kollektiv mit wechselnden Ausstellungen. Eine Website, die sich mit jeder Show neu einfärbt.',
-      en: '⟨TODO⟩ Placeholder. Artist collective with rotating exhibitions. A website that recolours itself with every show.',
+      de: 'Fünf Standorte unter einer Marke: Salonfinder mit Karte, Öffnungszeiten in Echtzeit, Termin pro Salon.',
+      en: 'Five locations under one brand: salon finder with map, live opening hours, booking per salon.',
     },
   },
 ];

@@ -1,48 +1,34 @@
-/* Boot screen: percentage counter, dotted bar and a terminal log.
-   Finishes with a CRT "power on" beam. */
+/* Loading screen: a counter whose colour runs from cold blue to warm ember
+   as it fills, then the picture opens like an iris. */
 export function createPreloader() {
+  const root = document.querySelector('.preloader');
   const count = document.querySelector('.js-count');
-  const bar = document.querySelector('.js-bar');
-  const log = document.querySelector('.js-log');
   let shown = 0;
   let target = 0;
   let raf = 0;
   const started = performance.now();
 
   const tick = () => {
-    shown += (target - shown) * 0.12;
+    shown += (target - shown) * 0.1;
     if (target - shown < 0.002) shown = target;
-    const pct = Math.round(shown * 100);
-    count.textContent = String(pct).padStart(3, '0');
-    bar.style.width = pct + '%';
+    count.textContent = String(Math.round(shown * 100)).padStart(3, '0');
+    root.style.setProperty('--p', shown.toFixed(3));
     raf = requestAnimationFrame(tick);
   };
   raf = requestAnimationFrame(tick);
 
-  function line(text) {
-    const li = document.createElement('li');
-    li.textContent = text;
-    log.appendChild(li);
-    while (log.children.length > 5) log.firstChild.remove();
-  }
-
   return {
-    set(p, msg) {
+    set(p) {
       target = Math.max(target, Math.min(1, p));
-      if (msg) line(msg);
     },
-    line,
-    async done(minDuration = 1600) {
+    async done(minDuration = 1500) {
       target = 1;
-      const wait = Math.max(0, minDuration - (performance.now() - started));
-      await new Promise((r) => setTimeout(r, wait));
-      // wait for counter to catch up
+      await new Promise((r) => setTimeout(r, Math.max(0, minDuration - (performance.now() - started))));
       await new Promise((r) => {
         const check = () => (shown >= 0.999 ? r() : requestAnimationFrame(check));
         check();
       });
-      line('signal locked');
-      await new Promise((r) => setTimeout(r, 220));
+      await new Promise((r) => setTimeout(r, 180));
       document.body.classList.add('is-booted');
       document.body.classList.remove('is-loading');
       setTimeout(() => cancelAnimationFrame(raf), 1200);

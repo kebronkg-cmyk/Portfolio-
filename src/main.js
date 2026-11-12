@@ -4,66 +4,82 @@ import { applyLang, getLang, setLangStored, t } from './ui/i18n.js';
 import { createPreloader } from './ui/preloader.js';
 import { createCursor } from './ui/cursor.js';
 import { setupSensors } from './ui/sensors.js';
-import { bindScramble, scramble } from './ui/scramble.js';
-import { generateCovers, canvasToUrl } from './gl/covers.js';
 
 const BASE = import.meta.env.BASE_URL;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const pad = (n) => String(n).padStart(2, '0');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isMobile = () => innerWidth < 860;
 const debug = new URLSearchParams(location.search).has('debug');
 
 let lang = getLang();
 applyLang(lang);
-bindScramble();
 
 const preloader = createPreloader();
 const cursor = createCursor();
-preloader.line('power on');
-preloader.line('init display @ ' + innerWidth + 'x' + innerHeight);
 
-/* ---------------------------------------------------------------------------
-   Project media: real images if present, generated covers otherwise
-   --------------------------------------------------------------------------- */
-const media = projects.map((p) => ({
-  urls: p.images.map((f) => `${BASE}projects/${p.slug}/${f}`),
-  covers: null,
-}));
+const imageUrls = (i) => projects[i].images.map((f) => `${BASE}projects/${projects[i].slug}/${f}`);
 
-function coversFor(i) {
-  if (!media[i].covers) media[i].covers = generateCovers(projects[i]);
-  return media[i].covers;
+/* The last sheet the giant holds up: the invitation to get in touch. */
+function contactSheet(mobile) {
+  const c = document.createElement('canvas');
+  c.width = mobile ? 900 : 1600;
+  c.height = mobile ? 1500 : 1000;
+  const ctx = c.getContext('2d');
+  const W = c.width,
+    H = c.height;
+  const k = copy[lang];
+  ctx.fillStyle = '#0b0b0c';
+  ctx.fillRect(0, 0, W, H);
+  const m = W * 0.07;
+  ctx.fillStyle = '#f3c3d0';
+  ctx.font = `500 ${W * 0.019}px "Geist Mono", monospace`;
+  ctx.textBaseline = 'top';
+  ctx.fillText((k.nav[3] || 'Kontakt').toUpperCase() + ' — ' + site.fullName.toUpperCase(), m, m);
+  ctx.textAlign = 'right';
+  ctx.fillText('→', W - m, m);
+  ctx.textAlign = 'left';
+  let size = mobile ? W * 0.135 : W * 0.098;
+  ctx.font = `640 ${size}px "Geist Variable", sans-serif`;
+  const widest = Math.max(...k.contactTitle.map((l) => ctx.measureText(l).width));
+  if (widest > W - m * 2) size *= (W - m * 2) / widest;
+  ctx.font = `640 ${size}px "Geist Variable", sans-serif`;
+  ctx.textBaseline = 'alphabetic';
+  const y0 = H * (mobile ? 0.42 : 0.5);
+  k.contactTitle.forEach((l, i) => {
+    ctx.fillStyle = i === k.contactTitle.length - 1 ? '#f3c3d0' : '#fbf7f5';
+    ctx.fillText(l, m - size * 0.04, y0 + i * size * 1.02);
+  });
+  ctx.fillStyle = '#fbf7f5';
+  ctx.globalAlpha = 0.7;
+  ctx.font = `400 ${W * (mobile ? 0.04 : 0.021)}px "Geist Variable", sans-serif`;
+  ctx.fillText(k.contactSub, m, H - m - W * 0.01);
+  ctx.globalAlpha = 1;
+  return c;
 }
 
-async function imageUrlsFor(i) {
-  if (media[i].urls.length) return media[i].urls;
-  if (!media[i].generatedUrls) media[i].generatedUrls = await Promise.all(coversFor(i).map(canvasToUrl));
-  return media[i].generatedUrls;
-}
-
 /* ---------------------------------------------------------------------------
-   Layout: work section length depends on number of projects
+   Layout
    --------------------------------------------------------------------------- */
-const secWork = $('.sec--work');
-secWork.style.setProperty('--len', 120 + projects.length * 95);
-$('.js-card-total').textContent = String(projects.length).padStart(2, '0');
+const N = projects.length;
+$('.sec--work').style.setProperty('--len', 40 + N * 150);
+$('.js-card-total').textContent = pad(N);
 
 /* ---------------------------------------------------------------------------
    Smooth scroll + section progress
    --------------------------------------------------------------------------- */
-const lenis = new Lenis({ lerp: reduced ? 1 : 0.09, wheelMultiplier: 0.9, touchMultiplier: 1.4, smoothWheel: !reduced });
+const lenis = new Lenis({ lerp: reduced ? 1 : 0.1, wheelMultiplier: 0.9, smoothWheel: !reduced });
 lenis.stop();
+const sections = $$('.sec').map((el) => ({ el, name: el.dataset.section, top: 0, len: 1 }));
 if (debug) {
   window.__lenis = lenis;
-  // jump to a section progress: __goto('about', .5)
   window.__goto = (name, p) => {
     const s = sections.find((x) => x.name === name);
     lenis.scrollTo(s.top + s.len * p, { immediate: true });
   };
 }
-const sections = $$('.sec').map((el) => ({ el, name: el.dataset.section, top: 0, len: 1 }));
 function measure() {
   const vh = innerHeight;
   sections.forEach((s) => {
@@ -80,91 +96,73 @@ addEventListener('resize', () => {
 let stage = null;
 let current = 'hero';
 let activeProject = 0;
+let aboutStep = -1;
 const progress = { hero: 0, work: 0, about: 0, contact: 0 };
 
-function fade(p, a, b, edge = 0.06) {
-  // 1 inside [a, b], fading at both ends
-  return clamp((p - a) / edge) * clamp((b - p) / edge);
-}
-function setReveal(el, o, dir = 1) {
+const fade = (p, a, b, edge = 0.05) => clamp((p - a) / edge) * clamp((b - p) / edge);
+function reveal(el, o, dist = 20) {
   if (!el) return;
-  el.style.setProperty('--o', o.toFixed(3));
-  el.style.setProperty('--y', ((1 - o) * 24 * dir).toFixed(1) + 'px');
-  el.style.setProperty('--b', ((1 - o) * 6).toFixed(1) + 'px');
+  el.style.opacity = o.toFixed(3);
+  el.style.transform = o >= 0.999 ? '' : `translate3d(0, ${((1 - o) * dist).toFixed(1)}px, 0)`;
   el.style.visibility = o < 0.01 ? 'hidden' : '';
 }
 
 function update(scroll, velocity) {
-  const vh = innerHeight;
-  const mid = scroll + vh * 0.5;
+  const mid = scroll + innerHeight * 0.5;
   for (const s of sections) {
     progress[s.name] = clamp((scroll - s.top) / s.len);
     if (mid >= s.top && mid < s.top + s.el.offsetHeight) current = s.name;
   }
-  // hero
-  const h = progress.hero;
-  const heroO = 1 - clamp((h - 0.18) / 0.22);
-  $$('.sec--hero .reveal').forEach((el) => setReveal(el, heroO, -1));
-  // work: index + card visible only while in section
-  const w = progress.work;
-  const inWork = current === 'work' ? fade(w, 0.02, 0.98, 0.04) : 0;
-  setReveal($('.work__index'), inWork);
-  setReveal($('.work__card'), inWork);
-  $('.js-work-progress').parentElement.style.opacity = inWork;
-  $('.js-work-progress').style.setProperty('--p', w.toFixed(3));
-  // about steps
-  const a = progress.about;
-  const steps = [fade(a, 0.08, 0.4), fade(a, 0.46, 0.7), fade(a, 0.76, 1.2)];
-  $$('.sec--about [data-step]').forEach((el) => setReveal(el, steps[+el.dataset.step]));
-  // contact
-  const c = progress.contact;
-  const cO = clamp((c - 0.18) / 0.25);
-  $$('.contact > *').forEach((el, i) => setReveal(el, clamp(cO * 1.4 - i * 0.12)));
-  setReveal($('.footer'), clamp((c - 0.35) / 0.2));
+  const is = (n) => current === n;
 
-  // theme for the DOM (header, colors)
-  const light = stage ? stage.invert > 0.5 : current === 'work' || current === 'about';
-  const theme = light ? 'light' : 'dark';
-  if (document.documentElement.dataset.theme !== theme) {
-    document.documentElement.dataset.theme = theme;
-    $('meta[name="theme-color"]').setAttribute('content', light ? '#f3f4f1' : '#000000');
+  $$('.sec--hero .js-reveal').forEach((el) => reveal(el, is('hero') ? 1 - clamp((progress.hero - 0.25) / 0.25) : 0, -20));
+
+  const inWork = is('work') ? fade(progress.work, 0.015, 0.985, 0.025) : 0;
+  $$('.js-work-ui').forEach((el) => reveal(el, inWork));
+
+  const a = progress.about;
+  const step = is('about') && a > 0.06 && a < 0.97 ? Math.min(2, Math.floor(((a - 0.06) / 0.91) * 3)) : -1;
+  if (step !== aboutStep) {
+    aboutStep = step;
+    $$('.about__step').forEach((el) => el.classList.toggle('is-active', +el.dataset.step === step));
   }
 
+  const cO = is('contact') ? clamp((progress.contact - 0.55) / 0.2) : 0;
+  reveal($('.js-contact'), cO);
+  reveal($('.js-footer'), clamp((progress.contact - 0.7) / 0.2) * (is('contact') ? 1 : 0), 0);
+
   stage?.setProgress({ ...progress, section: current, velocity });
+  syncScene();
+}
+
+/* the DOM takes its colours from the scene the giant is in */
+function syncScene() {
+  const scene = { hero: 'white', work: 'rose', about: 'white', contact: 'black' }[current];
+  if (document.documentElement.dataset.scene !== scene) {
+    document.documentElement.dataset.scene = scene;
+    $('meta[name="theme-color"]').setAttribute('content', { white: '#fbf7f5', rose: '#f3c3d0', black: '#0b0b0c' }[scene]);
+  }
 }
 
 lenis.on('scroll', (l) => update(l.scroll, l.velocity));
 function raf(time) {
   lenis.raf(time);
-  // keep theme in sync with the GL crossfade even when not scrolling
-  if (stage) {
-    const light = stage.invert > 0.5 ? 'light' : 'dark';
-    if (document.documentElement.dataset.theme !== light) update(lenis.scroll, 0);
-  }
   requestAnimationFrame(raf);
 }
 requestAnimationFrame(raf);
 
-/* anchors */
+/* anchors: land inside each section where its content is up */
+const LAND = { hero: 0, work: 0.1, about: 0.12, contact: 0.85 };
 document.addEventListener('click', (e) => {
-  const a = e.target.closest('a[href^="#"], [data-scroll-to]');
+  const a = e.target.closest('a[href^="#"]');
   if (!a) return;
-  const href = a.getAttribute('href');
   e.preventDefault();
   closeMenu();
-  let target = href === '#top' || a.dataset.scrollTo === '0' ? 0 : $(href);
-  // land a bit inside sections so the content is already revealed
-  if (target && target !== 0) {
-    const s = sections.find((x) => x.el === target);
-    if (s) target = s.top + (s.name === 'contact' ? s.len * 0.75 : s.name === 'work' ? s.len * 0.12 : s.len * 0.2);
-  }
-  lenis.scrollTo(target ?? 0, { duration: 2.2 });
-  stage?.glitch(0.8);
+  const el = $(a.getAttribute('href'));
+  const s = sections.find((x) => x.el === el) || sections[0];
+  lenis.scrollTo(a.getAttribute('href') === '#top' ? 0 : s.top + s.len * (LAND[s.name] ?? 0.2), { duration: 2.2 });
 });
-$('.js-back').addEventListener('click', () => {
-  lenis.scrollTo(0, { duration: 3 });
-  stage?.glitch(1);
-});
+$('.js-back').addEventListener('click', () => lenis.scrollTo(0, { duration: 3 }));
 
 /* ---------------------------------------------------------------------------
    Work card + list
@@ -173,122 +171,116 @@ function setActive(i) {
   activeProject = i;
   const p = projects[i];
   $$('.js-work-list li').forEach((li) => li.classList.toggle('is-active', +li.dataset.index === i));
-  const card = $('.js-work-card');
-  $('.js-card-num').textContent = String(i + 1).padStart(2, '0');
+  $('.js-card-num').textContent = pad(i + 1);
   $('.js-card-title').textContent = p.title;
-  $('.js-card-year').textContent = p.year;
+  $('.js-card-kind').textContent = `${p.kind?.[lang] ?? ''} — ${p.year}`;
   $('.js-card-info').textContent = p.info[lang] ?? p.info.de;
-  $('.js-card-role').textContent = p.role.join(', ');
+  const card = $('.js-work-card');
   card.classList.remove('is-switching');
   void card.offsetWidth;
   card.classList.add('is-switching');
-  scramble($('.js-card-title'), { duration: 380, text: p.title });
 }
 setActive(0);
 
 document.addEventListener('click', (e) => {
   const b = e.target.closest('.js-work-list button');
   if (!b) return;
-  const i = +b.dataset.index;
   const s = sections.find((x) => x.name === 'work');
-  const lead = 0.1;
-  const p = projects.length > 1 ? lead + (i / (projects.length - 1)) * (1 - lead) : lead;
-  lenis.scrollTo(s.top + s.len * p, { duration: 1.6 });
+  // land where this project's sheet is held out
+  lenis.scrollTo(s.top + s.len * ((+b.dataset.index + 0.8) / N), { duration: 1.8 });
 });
 $('.js-card-open').addEventListener('click', () => openProject(activeProject));
 
 /* ---------------------------------------------------------------------------
    Overlays: menu, project, form
    --------------------------------------------------------------------------- */
-const menu = $('#menu');
-const menuBtn = $('.js-menu-open');
 let lastFocus = null;
-function openMenu() {
-  lastFocus = document.activeElement;
-  menu.classList.add('is-open');
-  menu.setAttribute('aria-hidden', 'false');
-  menuBtn.setAttribute('aria-expanded', 'true');
-  lenis.stop();
-  stage?.glitch(0.7);
-  setTimeout(() => $('.js-menu-close').focus(), 50);
+const overlays = [];
+function makeOverlay(el, focus) {
+  const o = {
+    el,
+    open() {
+      if (el.classList.contains('is-open')) return;
+      overlays.forEach((x) => x !== o && x.close(true));
+      lastFocus = document.activeElement;
+      el.classList.add('is-open');
+      el.setAttribute('aria-hidden', 'false');
+      lenis.stop();
+      setTimeout(() => $(focus, el)?.focus?.(), 60);
+    },
+    close(silent) {
+      if (!el.classList.contains('is-open')) return;
+      el.classList.remove('is-open');
+      el.setAttribute('aria-hidden', 'true');
+      if (!silent) {
+        lenis.start();
+        lastFocus?.focus?.();
+      }
+    },
+  };
+  overlays.push(o);
+  return o;
 }
-function closeMenu() {
-  if (!menu.classList.contains('is-open')) return;
-  menu.classList.remove('is-open');
-  menu.setAttribute('aria-hidden', 'true');
+
+const menuBtn = $('.js-menu-open');
+const menu = makeOverlay($('#menu'), '.js-menu-close');
+const closeMenu = () => {
+  menu.close();
   menuBtn.setAttribute('aria-expanded', 'false');
-  lenis.start();
-  lastFocus?.focus?.();
-}
-menuBtn.addEventListener('click', openMenu);
+};
+menuBtn.addEventListener('click', () => {
+  menu.open();
+  menuBtn.setAttribute('aria-expanded', 'true');
+});
+$('.js-menu-close').addEventListener('click', closeMenu);
 const clock = $('.js-clock');
 const tick = () => {
   try {
-    clock.textContent =
-      new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: site.timezone }).format(new Date()) +
-      ' · ' +
-      site.timezone.split('/').pop().replace('_', ' ');
+    clock.textContent = new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit', timeZone: site.timezone }).format(new Date()) + ' · ' + site.timezone.split('/').pop().replace('_', ' ');
   } catch {
     clock.textContent = new Date().toLocaleTimeString();
   }
 };
 tick();
-setInterval(tick, 1000);
-$('.js-menu-close').addEventListener('click', closeMenu);
+setInterval(tick, 10000);
 
-// project overlay
-const pov = $('.project');
+const pov = makeOverlay($('.project'), '.js-p-close');
 let pIndex = 0,
   pImg = 0,
   pUrls = [];
-async function openProject(i) {
+function openProject(i) {
   pIndex = i;
-  pImg = 0;
   const p = projects[i];
   $('.js-p-title').textContent = p.title;
+  $('.js-p-kind').textContent = `${p.kind?.[lang] ?? ''} — ${p.year}`;
   $('.js-p-info').textContent = p.info[lang] ?? p.info.de;
-  $('.js-p-role').textContent = p.role.join(', ');
-  $('.js-p-year').textContent = p.year;
   const visit = $('.js-p-visit');
   visit.hidden = !p.url;
   if (p.url) visit.href = p.url;
-  pUrls = await imageUrlsFor(i);
-  $('.js-p-count').textContent = String(pUrls.length).padStart(2, '0');
+  pUrls = imageUrls(i);
+  $('.js-p-count').textContent = pUrls.length;
   $('.js-p-dots').innerHTML = pUrls.map((_, k) => `<button aria-label="${k + 1}" data-k="${k}"></button>`).join('');
   showImg(0);
-  lastFocus = document.activeElement;
-  pov.classList.add('is-open');
-  pov.setAttribute('aria-hidden', 'false');
-  lenis.stop();
-  stage?.glitch(0.9);
-  setTimeout(() => $('.js-p-close').focus(), 50);
+  pov.open();
 }
 function showImg(k) {
   pImg = (k + pUrls.length) % pUrls.length;
   const img = $('.js-p-img');
   img.src = pUrls[pImg];
   img.alt = `${projects[pIndex].title} – ${pImg + 1}`;
-  $('.js-p-index').textContent = String(pImg + 1).padStart(2, '0');
+  $('.js-p-index').textContent = pImg + 1;
   $$('.js-p-dots button').forEach((b, i) => b.setAttribute('aria-current', i === pImg));
-  pov.classList.remove('is-switching');
-  void pov.offsetWidth;
-  pov.classList.add('is-switching');
+  pov.el.classList.remove('is-switching');
+  void pov.el.offsetWidth;
+  pov.el.classList.add('is-switching');
 }
-function closeProject() {
-  if (!pov.classList.contains('is-open')) return;
-  pov.classList.remove('is-open');
-  pov.setAttribute('aria-hidden', 'true');
-  lenis.start();
-  lastFocus?.focus?.();
-}
-$('.js-p-close').addEventListener('click', closeProject);
+$('.js-p-close').addEventListener('click', () => pov.close());
 $('.js-p-prev').addEventListener('click', () => showImg(pImg - 1));
 $('.js-p-next').addEventListener('click', () => showImg(pImg + 1));
 $('.js-p-dots').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (b) showImg(+b.dataset.k);
 });
-// swipe
 let sx = null;
 $('.project__frame').addEventListener('pointerdown', (e) => (sx = e.clientX));
 $('.project__frame').addEventListener('pointerup', (e) => {
@@ -298,27 +290,17 @@ $('.project__frame').addEventListener('pointerup', (e) => {
   sx = null;
 });
 
-// contact form
-const modal = $('.js-form-modal');
+// contact form — every button on the page leads here
 const form = $('.js-form');
-function openForm() {
-  lastFocus = document.activeElement;
-  modal.classList.add('is-open');
-  modal.setAttribute('aria-hidden', 'false');
-  lenis.stop();
-  stage?.glitch(0.6);
-  setTimeout(() => form.querySelector('input').focus(), 60);
-}
-function closeForm() {
-  if (!modal.classList.contains('is-open')) return;
-  modal.classList.remove('is-open');
-  modal.setAttribute('aria-hidden', 'true');
-  lenis.start();
-  lastFocus?.focus?.();
-}
-$('.js-form-open').addEventListener('click', openForm);
-$('.js-form-close').addEventListener('click', closeForm);
-modal.addEventListener('click', (e) => e.target === modal && closeForm());
+const modal = makeOverlay($('.js-form-modal'), 'input[name="name"]');
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.js-form-open, .js-p-ask')) {
+    menuBtn.setAttribute('aria-expanded', 'false');
+    modal.open();
+  }
+});
+$('.js-form-close').addEventListener('click', () => modal.close());
+modal.el.addEventListener('click', (e) => e.target === modal.el && modal.close());
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const status = $('.js-form-status');
@@ -329,8 +311,8 @@ form.addEventListener('submit', async (e) => {
   const data = Object.fromEntries(new FormData(form));
   const f = copy[lang].form;
   if (!site.formEndpoint) {
-    const body = `${data.message}\n\n— ${data.name}${data.company ? ' (' + data.company + ')' : ''}\n${data.email}\nBudget: ${data.budget}`;
-    location.href = `mailto:${site.email}?subject=${encodeURIComponent('Projektanfrage – ' + data.name)}&body=${encodeURIComponent(body)}`;
+    const body = `${data.message}\n\n${f.need}: ${data.need}\n${f.budget}: ${data.budget}\n\n— ${data.name}${data.company ? ' (' + data.company + ')' : ''}\n${data.email}`;
+    location.href = `mailto:${site.email}?subject=${encodeURIComponent(f.title + ' – ' + data.name)}&body=${encodeURIComponent(body)}`;
     return;
   }
   status.textContent = f.sending;
@@ -351,16 +333,15 @@ form.addEventListener('submit', async (e) => {
 addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeMenu();
-    closeProject();
-    closeForm();
+    pov.close();
+    modal.close();
   }
-  if (pov.classList.contains('is-open')) {
+  if (pov.el.classList.contains('is-open')) {
     if (e.key === 'ArrowRight') showImg(pImg + 1);
     if (e.key === 'ArrowLeft') showImg(pImg - 1);
   }
 });
 
-/* language switch */
 $('.js-lang').addEventListener('click', (e) => {
   const b = e.target.closest('button[data-lang]');
   if (!b || b.dataset.lang === lang) return;
@@ -368,29 +349,30 @@ $('.js-lang').addEventListener('click', (e) => {
   setLangStored(lang);
   applyLang(lang);
   setActive(activeProject);
-  stage?.glitch(1);
+  aboutStep = -2;
+  tick();
+  stage?.setContactSheet(contactSheet(isMobile()));
+  update(lenis.scroll, 0);
 });
 
 /* ---------------------------------------------------------------------------
-   Pointer → WebGL (parallax, portrait, screen hover)
+   Pointer → giant (head follows, sheet can be tapped)
    --------------------------------------------------------------------------- */
-const coords = $('.js-coords');
-const fpsEl = $('.js-fps');
-let hovered = null;
+const UI = 'a, button, input, textarea, label, .menu, .project, .modal';
+const ndc = (e) => [(e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1];
 addEventListener('pointermove', (e) => {
   if (!stage) return;
-  const x = (e.clientX / innerWidth) * 2 - 1;
-  const y = -(e.clientY / innerHeight) * 2 + 1;
+  const [x, y] = ndc(e);
   if (e.pointerType === 'mouse') stage.setPointer(x, y);
-  coords.textContent = `x ${x.toFixed(3)} · y ${y.toFixed(3)}`;
-  const overUi = e.target.closest('a, button, input, textarea, .work__card, .menu, .project, .modal');
-  hovered = overUi ? null : stage.pick(x, y);
-  stage.setHovered(hovered);
-  cursor.setLabel(hovered !== null ? t(lang, 'openProject') : '');
+  const hit = e.target.closest(UI) ? null : stage.pick(x, y);
+  stage.setHovered(hit !== null);
+  cursor.setLabel(hit === null ? '' : hit === 'contact' ? t(lang, 'cta') : t(lang, 'view'));
 });
 addEventListener('click', (e) => {
-  if (hovered === null || e.target.closest('a, button, input, textarea, .menu, .project, .modal')) return;
-  openProject(hovered);
+  if (!stage || e.target.closest(UI)) return;
+  const hit = stage.pick(...ndc(e));
+  if (hit === 'contact') modal.open();
+  else if (hit !== null) openProject(hit);
 });
 
 /* ---------------------------------------------------------------------------
@@ -398,68 +380,60 @@ addEventListener('click', (e) => {
    --------------------------------------------------------------------------- */
 function hasWebGL2() {
   try {
-    const c = document.createElement('canvas');
-    return !!c.getContext('webgl2');
+    return !!document.createElement('canvas').getContext('webgl2');
   } catch {
     return false;
   }
 }
 
 async function boot() {
-  preloader.set(0.05, 'loading fonts');
+  preloader.set(0.08);
   await document.fonts.ready;
-  preloader.set(0.12, 'fonts ok');
+  await Promise.all([document.fonts.load('900 100px "Doto"'), document.fonts.load('640 100px "Geist Variable"'), document.fonts.load('500 20px "Geist Mono"')]).catch(() => {});
+  preloader.set(0.2);
 
   if (!hasWebGL2()) {
     document.documentElement.classList.add('no-webgl');
-    preloader.line('webgl unavailable → fallback');
   } else {
     try {
       const { createStage } = await import('./gl/stage.js');
-      // screen textures: first image of each project or its generated cover
-      const textures = projects.map((p, i) => (media[i].urls[0] ? media[i].urls[0] : coversFor(i)[0]));
-      preloader.set(0.2, 'generating covers');
+      const mobile = isMobile();
       stage = await createStage({
         canvas: $('#gl'),
         projects,
-        textures,
-        portraitUrl: site.portrait ? BASE + site.portrait : '',
-        keyOut: site.portraitKeyOut,
-        mobile: isMobile(),
+        sheets: projects.map((p) => `${BASE}projects/${p.slug}/${mobile ? 'm.jpg' : p.images[0]}`),
+        contactSheet: contactSheet(mobile),
+        name: site.name,
+        mobile,
         reducedMotion: reduced,
-        onProgress: (p, msg) => preloader.set(0.2 + p * 0.75, msg),
+        onProgress: (p) => preloader.set(0.2 + p * 0.78),
       });
       stage.onActive = (i) => setActive(i);
       stage.start();
-      if (!stage.portraitIsPhoto) preloader.line('portrait.jpg missing → procedural bust');
-      const gyro = setupSensors((x, y) => {
+      if (debug) window.__stage = stage;
+      setupSensors((x, y) => {
         stage.gyro = true;
         stage.setPointer(x, y);
       });
-      if (debug) setInterval(() => (fpsEl.textContent = Math.round(stage.fps) + ' fps'), 500);
-      else fpsEl.textContent = 'signal ok';
-      void gyro;
     } catch (err) {
       console.error(err);
+      stage = null;
       document.documentElement.classList.add('no-webgl');
-      preloader.line('render error → fallback');
     }
   }
   measure();
   update(0, 0);
-  await preloader.done(reduced ? 300 : 1800);
+  await preloader.done(reduced ? 300 : 1400);
   stage?.boot();
   lenis.start();
-  $$('.sec--hero .reveal').forEach((el, i) => {
-    el.animate(
-      [
-        { opacity: 0, transform: 'translateY(16px)', filter: 'blur(8px)' },
-        { opacity: 1, transform: 'none', filter: 'blur(0)' },
-      ],
-      { duration: 900, delay: 500 + i * 140, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' },
-    );
+  $$('.sec--hero .js-reveal').forEach((el, i) => {
+    el.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], {
+      duration: 900,
+      delay: 900 + i * 120,
+      easing: 'cubic-bezier(.22,1,.36,1)',
+      fill: 'backwards',
+    });
   });
-  scramble($('.hero__name'), { duration: 900 });
 }
 
 boot();

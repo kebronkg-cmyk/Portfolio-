@@ -28,7 +28,7 @@ Format: `👉 [Beschreibung](URL)`
 | Branch-Freigabe (Environment `github-pages` → „Add deployment branch or tag rule“ → `claude/**`) | `https://github.com/OWNER/REPO/settings/environments` |
 | Build-Status / „Re-run all jobs“ | `https://github.com/OWNER/REPO/actions` |
 | Workflow direkt | `https://github.com/OWNER/REPO/actions/workflows/deploy.yml` |
-| **Live-Vorschau** | `https://OWNER.github.io/REPO/` (Owner kleingeschrieben) |
+| **Live-Vorschau** | `https://OWNER.github.io/REPO/` (Owner kleingeschrieben). Baut der Workflow mehrere Versionen (siehe `deploy.yml`), liegt die aktuelle unter `/v2/` – steht in `CLAUDE.md`. |
 | Pull Requests | `https://github.com/OWNER/REPO/pulls` |
 
 ## 3. Vorgehen

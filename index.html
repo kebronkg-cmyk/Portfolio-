@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#070708" />
+    <meta name="color-scheme" content="dark" />
+    <title>Kebron — Developer & Designer</title>
+    <meta name="description" content="" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body class="is-loading">
+    <a class="skip-link" href="#work" data-i18n="skip"></a>
+
+    <div class="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
+
+    <div class="preloader" role="status" aria-live="polite">
+      <div class="preloader__count"><span class="js-count">000</span></div>
+      <div class="preloader__bar"><span></span></div>
+    </div>
+
+    <header class="header">
+      <a class="header__logo js-logo" href="#top"></a>
+      <nav class="header__right" aria-label="Primär">
+        <div class="lang js-lang" role="group" aria-label="Sprache"></div>
+        <button class="header__cta js-form-open"><i aria-hidden="true"></i><span data-i18n="cta"></span></button>
+        <button class="header__menu js-menu-open" aria-expanded="false" aria-controls="menu"><span data-i18n="menu"></span><i aria-hidden="true"></i></button>
+      </nav>
+    </header>
+
+    <main id="top" class="scroller">
+      <!-- 1 · HERO -->
+      <section class="sec sec--hero" data-section="hero" style="--len: 170">
+        <div class="sticky">
+          <div class="hero">
+            <ul class="hero__meta js-reveal js-hero-meta" aria-hidden="true"></ul>
+            <div class="hero__left js-reveal">
+              <p class="label" data-i18n="role"></p>
+              <h1 class="hero__title js-hero-title"></h1>
+            </div>
+            <div class="hero__right js-reveal">
+              <p class="hero__text" data-i18n="heroText"></p>
+              <div class="hero__actions">
+                <button class="btn js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
+                <a class="btn btn--line" href="#work"><span data-i18n="heroSecondary"></span></a>
+              </div>
+            </div>
+            <div class="hero__scroll js-reveal" aria-hidden="true"><i></i><span data-i18n="scrollHint"></span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 · PITCH: the swarm writes the words, one sentence underneath -->
+      <section class="sec sec--pitch" data-section="pitch" style="--len: 220">
+        <div class="sticky">
+          <div class="pitch">
+            <h2 class="sr-only js-statement-words"></h2>
+            <p class="pitch__line js-statement-text"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3 · WORK -->
+      <section id="work" class="sec sec--work" data-section="work">
+        <div class="sticky">
+          <div class="work">
+            <div class="work__head js-work-ui">
+              <p class="label" data-i18n="workLabel"></p>
+              <p class="work__count"><b class="js-card-num">01</b><span>/<span class="js-card-total">04</span></span></p>
+              <ol class="work__list js-work-list"></ol>
+            </div>
+            <article class="work__card js-work-ui js-work-card" aria-live="polite">
+              <img class="work__thumb js-card-thumb" alt="" loading="lazy" />
+              <h2 class="work__name js-card-title"></h2>
+              <p class="label js-card-kind"></p>
+              <p class="work__info js-card-info"></p>
+              <button class="btn btn--sm js-card-open"><span data-i18n="view"></span><i class="arrow" aria-hidden="true"></i></button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 · WHO FOR -->
+      <section id="sectors" class="sec sec--sectors" data-section="sectors">
+        <div class="sticky">
+          <div class="steps js-sectors"><p class="bigword js-bigword" aria-hidden="true"></p></div>
+        </div>
+      </section>
+
+      <!-- 5 · PROCESS -->
+      <section id="process" class="sec sec--process" data-section="process" style="--len: 300">
+        <div class="sticky">
+          <div class="steps js-process"><p class="bigword js-bigword" aria-hidden="true"></p></div>
+        </div>
+      </section>
+
+      <!-- 6 · CONTACT -->
+      <section id="contact" class="sec sec--contact" data-section="contact" style="--len: 240">
+        <div class="sticky">
+          <h2 class="sr-only js-contact-title"></h2>
+          <div class="contact js-contact">
+            <button class="btn btn--lg js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
+          </div>
+          <footer class="footer js-footer">
+            <ul class="footer__social js-socials"></ul>
+            <button class="footer__back js-back"><i class="arrow arrow--up" aria-hidden="true"></i><span data-i18n="scrollBack"></span></button>
+            <div class="footer__legal">
+              <a href="impressum.html" data-i18n="imprint"></a>
+              <a href="datenschutz.html" data-i18n="privacy"></a>
+              <span>© <span class="js-year"></span> <span class="js-logo-text"></span></span>
+            </div>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <!-- Menu -->
+    <div id="menu" class="menu" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Menü">
+      <div class="menu__inner">
+        <button class="x js-menu-close"><span data-i18n="close"></span><i aria-hidden="true"></i></button>
+        <ol class="menu__nav js-menu-nav"></ol>
+        <div class="menu__side">
+          <dl class="menu__status">
+            <div><dt data-i18n="statusLabel"></dt><dd><i class="dot"></i><span data-i18n="status"></span></dd></div>
+            <div><dt data-i18n="timeLabel"></dt><dd class="js-clock">--:--</dd></div>
+          </dl>
+          <button class="btn js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
+          <ul class="menu__social js-menu-social"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project overlay -->
+    <div class="project" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="project__inner">
+        <div class="project__top">
+          <span class="label"><span data-i18n="image"></span> <b class="js-p-index">1</b>/<span class="js-p-count">3</span></span>
+          <button class="x js-p-close"><span data-i18n="close"></span><i aria-hidden="true"></i></button>
+        </div>
+        <div class="project__media">
+          <button class="project__nav js-p-prev" aria-label="Vorheriges Bild"><i class="arrow arrow--left"></i></button>
+          <div class="project__frame"><img class="js-p-img" alt="" /></div>
+          <button class="project__nav js-p-next" aria-label="Nächstes Bild"><i class="arrow"></i></button>
+        </div>
+        <div class="project__info">
+          <p class="label js-p-kind"></p>
+          <h2 class="project__title js-p-title"></h2>
+          <p class="project__text js-p-info"></p>
+          <div class="project__actions">
+            <a class="btn btn--line btn--sm js-p-visit" target="_blank" rel="noopener"><span data-i18n="visit"></span><i class="arrow arrow--out" aria-hidden="true"></i></a>
+            <button class="btn btn--sm js-p-ask"><span data-i18n="cta"></span></button>
+          </div>
+          <div class="project__dots js-p-dots"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact form: three quick steps -->
+    <div class="modal js-form-modal" aria-hidden="true" role="dialog" aria-modal="true">
+      <form class="form js-form" novalidate>
+        <div class="form__head">
+          <p class="label"><span data-i18n="form.title"></span> — <b class="js-step-num">1</b>/3</p>
+          <button type="button" class="x js-form-close"><span data-i18n="close"></span><i aria-hidden="true"></i></button>
+        </div>
+        <div class="form__bar" aria-hidden="true"><i></i><i></i><i></i></div>
+
+        <fieldset class="step" data-step="0">
+          <legend class="step__title js-step-title"></legend>
+          <div class="form__chips form__chips--big js-needs"></div>
+        </fieldset>
+        <fieldset class="step" data-step="1">
+          <legend class="step__title js-step-title"></legend>
+          <label><span data-i18n="form.message"></span><textarea name="message" rows="3"></textarea></label>
+          <div class="form__group"><span class="form__cap" data-i18n="form.budget"></span><div class="form__chips js-budgets"></div></div>
+        </fieldset>
+        <fieldset class="step" data-step="2">
+          <legend class="step__title js-step-title"></legend>
+          <label><span data-i18n="form.name"></span><input name="name" required autocomplete="name" /></label>
+          <label><span data-i18n="form.email"></span><input name="email" type="email" required autocomplete="email" /></label>
+          <label><span data-i18n="form.company"></span><input name="company" autocomplete="organization" /></label>
+        </fieldset>
+
+        <div class="form__foot">
+          <button type="button" class="form__back js-step-back"><i class="arrow arrow--left" aria-hidden="true"></i><span data-i18n="form.back"></span></button>
+          <p class="form__status js-form-status" role="status"></p>
+          <button type="button" class="btn js-step-next"><span data-i18n="form.next"></span><i class="arrow" aria-hidden="true"></i></button>
+          <button class="btn js-step-send" type="submit"><span data-i18n="form.send"></span><i class="arrow" aria-hidden="true"></i></button>
+        </div>
+      </form>
+    </div>
+
+    <div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

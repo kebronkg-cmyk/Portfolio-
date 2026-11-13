@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" data-scene="black">
+<html lang="de">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -37,9 +37,10 @@
       <section class="sec sec--hero" data-section="hero" style="--len: 170">
         <div class="sticky">
           <div class="hero">
+            <ul class="hero__meta js-reveal js-hero-meta" aria-hidden="true"></ul>
             <div class="hero__left js-reveal">
               <p class="label" data-i18n="role"></p>
-              <h1 class="hero__title" data-i18n="heroTitle"></h1>
+              <h1 class="hero__title js-hero-title"></h1>
             </div>
             <div class="hero__right js-reveal">
               <p class="hero__text" data-i18n="heroText"></p>
@@ -54,9 +55,12 @@
       </section>
 
       <!-- 2 · PITCH: the swarm writes the words, one sentence underneath -->
-      <section class="sec sec--pitch" data-section="pitch" style="--len: 300">
+      <section class="sec sec--pitch" data-section="pitch" style="--len: 220">
         <div class="sticky">
-          <div class="pitch js-pitch"></div>
+          <div class="pitch">
+            <h2 class="sr-only js-statement-words"></h2>
+            <p class="pitch__line js-statement-text"></p>
+          </div>
         </div>
       </section>
 
@@ -83,14 +87,14 @@
       <!-- 4 · WHO FOR -->
       <section id="sectors" class="sec sec--sectors" data-section="sectors">
         <div class="sticky">
-          <div class="steps js-sectors"></div>
+          <div class="steps js-sectors"><p class="bigword js-bigword" aria-hidden="true"></p></div>
         </div>
       </section>
 
       <!-- 5 · PROCESS -->
       <section id="process" class="sec sec--process" data-section="process" style="--len: 300">
         <div class="sticky">
-          <div class="steps js-process"></div>
+          <div class="steps js-process"><p class="bigword js-bigword" aria-hidden="true"></p></div>
         </div>
       </section>
 

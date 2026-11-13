@@ -36,17 +36,17 @@ export const copy = {
     menu: 'Menü',
     close: 'Schließen',
     role: 'Developer & Designer — München', // ⟨TODO⟩ Standort prüfen
-    heroTitle: 'Websites, an denen man hängen bleibt.',
-    heroText: 'Design und Code aus einer Hand. Für Marken, die im Netz mehr wollen, als bloß vorhanden zu sein.',
+    heroTitle: ['Websites,', 'an denen man', 'hängen bleibt.'],
+    heroText: 'Design und Code aus einer Hand – vom ersten Entwurf bis zur fertigen Seite, die für dich arbeitet.',
+    heroMeta: ['Portfolio', 'Verfügbar für neue Projekte'],
     heroSecondary: 'Arbeiten ansehen',
     scrollHint: 'Scrollen',
 
-    // Aussage: Partikel formen die Wörter, darunter steht je ein Satz
-    pitch: [
-      { words: ['SCHÖN', 'REICHT NICHT.'], line: 'Eine hübsche Seite, die keiner findet, verkauft nichts.' },
-      { words: ['SCHNELL', 'AUCH NICHT.'], line: 'Eine schnelle Seite, an die sich keiner erinnert, auch nicht.' },
-      { words: ['ICH BAUE', 'BEIDES.'], line: 'Auftritt, Technik und ein klarer Weg zur Anfrage – in einer Seite.' },
-    ],
+    // Die eine Aussage: Zeichen-Chaos formt die großen Wörter, darunter steht der Satz
+    statement: {
+      words: ['DEINE WEBSITE', 'SPRICHT ZUERST.'],
+      text: 'Noch bevor jemand anruft, schreibt oder vorbeikommt, hat sie schon für dich geantwortet. Ich sorge dafür, dass sie das Richtige sagt.',
+    },
 
     workLabel: 'Arbeiten',
     view: 'Ansehen',
@@ -107,16 +107,16 @@ export const copy = {
     menu: 'Menu',
     close: 'Close',
     role: 'Developer & Designer — Munich',
-    heroTitle: 'Websites people get stuck on.',
-    heroText: 'Design and code from one hand. For brands that want more from the web than simply being there.',
+    heroTitle: ['Websites', 'people get', 'stuck on.'],
+    heroText: 'Design and code from one hand – from the first draft to the finished site that works for you.',
+    heroMeta: ['Portfolio', 'Available for new projects'],
     heroSecondary: 'See the work',
     scrollHint: 'Scroll',
 
-    pitch: [
-      { words: ['PRETTY', 'IS NOT ENOUGH.'], line: 'A pretty site nobody finds sells nothing.' },
-      { words: ['NEITHER', 'IS FAST.'], line: 'A fast site nobody remembers doesn’t either.' },
-      { words: ['I BUILD', 'BOTH.'], line: 'Presence, engineering and a clear path to the enquiry – in one site.' },
-    ],
+    statement: {
+      words: ['YOUR WEBSITE', 'SPEAKS FIRST.'],
+      text: 'Before anyone calls, writes or walks in, it has already answered for you. I make sure it says the right thing.',
+    },
 
     workLabel: 'Work',
     view: 'View',

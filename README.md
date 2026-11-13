@@ -1,6 +1,6 @@
 # Portfolio – Kebron.g
 
-Scroll-getriebene Portfolio-Seite in Schwarz und Pink. Der Avatar (aus einem Foto) fängt
+Scroll-getriebene Portfolio-Seite, dunkel mit rosa und weißen Akzenten. Der Avatar (aus einem Foto) fängt
 die Projekt-Plakate aus der Luft, lässt sie auf dem Finger kreisen und hält sie in die Kamera.
 
 - **Aktuelle Version:** [kebronkg-cmyk.github.io/Portfolio-/v2/](https://kebronkg-cmyk.github.io/Portfolio-/v2/)
@@ -9,13 +9,13 @@ die Projekt-Plakate aus der Luft, lässt sie auf dem Finger kreisen und hält si
 
 ## Ablauf der Seite
 
-1. **Start** – Avatar vor der Wand aus verschachtelten Rechtecken, die KEBRON / DEVELOPER / DESIGNER schreibt
-2. **Aussage** – ein Partikelschwarm schreibt drei Sätze vor ihm in die Luft
-3. **Arbeiten** – pinke Marmorwelt; pro Projekt: Plakat fliegt an → kreist auf dem Finger → wird gedreht,
-   gegriffen und groß gezeigt → weggeschleudert
-4. **Für wen** – Partikel schreiben die Branchen, eine Hand zeigt darauf
-5. **Ablauf** – 01 / 02 / 03
-6. **Kontakt** – er hält das große Schild hin; Antippen öffnet das Formular (drei Schritte)
+1. **Start** – der Avatar (das ausgeschnittene Foto als Relief) vor der Wand aus verschachtelten
+   Rechtecken, die KEBRON / DEVELOPER / DESIGNER schreibt
+2. **Aussage** – einmalig: ein Chaos flackernder Zeichen formt von selbst den Satz
+3. **Arbeiten** – pro Projekt ein Plakat: die Pizza kreist auf dem Finger, die anderen holt er
+   von rechts oder hebt sie von unten hoch; dann groß zeigen
+4. **Für wen** und 5. **Ablauf** – großes Pixel-Wort, eine Hand zeigt darauf
+6. **Kontakt** – er hebt das große Schild hoch; Antippen öffnet das Formular (drei Schritte)
 
 ## Lokal starten
 
@@ -35,14 +35,13 @@ src/
   content.js            ← alle Texte (DE/EN), Projekte, Links
   main.js               ← Scroll, Abschnitte, Overlays, Formular, Boot
   styles/main.css       ← Schwarz/Pink, Layout, Handy
-  assets/marble.jpg     ← pinker Marmor (selbst erzeugt) für Karte und Formular
   ui/                   ← Preloader, Cursor-Schild, Sprache
   gl/
-    figureShader.js     ← Avatar: Kopf/Torso mit Foto, Afro, Hemdärmel, Hände (Raymarching)
+    figure.js           ← Avatar: Foto-Relief für Kopf/Torso, Arme mit echtem Ärmelstoff, Hände
     rig.js              ← Choreografie der Plakate, Federn, Arm-IK, Finger, Kopf, Geste
-    compositeShader.js  ← Wand (Quadtree + Schrift), Marmor, Bildzeilen-Druck, Plakat, Tiefe
-    particles.js        ← Partikelschwarm, der Wörter formt
-    post.js             ← Röhren-Effekt, Glitch, Blitz bei Szenenwechsel
+    compositeShader.js  ← Wand (Quadtree + Schrift), Bildzeilen-Druck, Plakat, Tiefe
+    particles.js        ← Zeichen-Schwarm, der einmal einen Satz formt
+    post.js             ← Röhren-Effekt, Glitch, Blitz
     stage.js            ← Kamera, Szenen, Leistungsregelung, Zusammenspiel
 ```
 

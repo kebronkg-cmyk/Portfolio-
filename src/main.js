@@ -3,6 +3,7 @@ import { site, projects, copy } from './content.js';
 import { applyLang, getLang, setLangStored, t } from './ui/i18n.js';
 import { createPreloader } from './ui/preloader.js';
 import { createCursor } from './ui/cursor.js';
+import { scramble } from './ui/scramble.js';
 
 const BASE = import.meta.env.BASE_URL;
 const $ = (s, r = document) => r.querySelector(s);
@@ -59,17 +60,12 @@ function contactSheet(mobile) {
   ctx.globalAlpha = 1;
   return c;
 }
-const swarmTexts = () => ({
-  pitch: copy[lang].pitch.map((p) => p.words),
-  sectors: copy[lang].sectors.map((s) => s.word),
-  process: copy[lang].process.map((s) => s.word),
-});
 
 /* ---------------------------------------------------------------------------
    Layout: section lengths follow the amount of content
    --------------------------------------------------------------------------- */
 const N = projects.length;
-const counts = { pitch: copy[lang].pitch.length, sectors: copy[lang].sectors.length, process: copy[lang].process.length };
+const counts = { sectors: copy[lang].sectors.length, process: copy[lang].process.length };
 $('.sec--work').style.setProperty('--len', 40 + N * 190);
 $('.sec--sectors').style.setProperty('--len', 60 + counts.sectors * 62);
 $('.js-card-total').textContent = pad(N);
@@ -103,7 +99,7 @@ addEventListener('resize', () => {
 let stage = null;
 let current = 'hero';
 let activeProject = 0;
-const shownIndex = { pitch: -2, sectors: -2, process: -2 };
+const shownIndex = { sectors: -2, process: -2 };
 const progress = { hero: 0, pitch: 0, work: 0, sectors: 0, process: 0, contact: 0 };
 
 const fade = (p, a, b, edge = 0.05) => clamp((p - a) / edge) * clamp((b - p) / edge);
@@ -129,6 +125,12 @@ function setItems(key, root, idx) {
   $$(`${root} .steps__dots li`).forEach((el, i) => el.classList.toggle('is-active', i === idx));
   const dots = $(`${root} .steps__dots`);
   if (dots) dots.style.opacity = idx < 0 ? 0 : 1;
+  // the big pixel word scrambles into the new one
+  const big = $(`${root} .js-bigword`);
+  if (big) {
+    big.classList.toggle('is-on', idx >= 0);
+    if (idx >= 0) scramble(big, copy[lang][key][idx].word);
+  }
 }
 
 function update(scroll, velocity) {
@@ -141,7 +143,6 @@ function update(scroll, velocity) {
 
   $$('.sec--hero .js-reveal').forEach((el) => reveal(el, is('hero') ? 1 - clamp((progress.hero - 0.3) / 0.25) : 0, -20));
 
-  setItems('pitch', '.js-pitch', is('pitch') ? slot(progress.pitch, counts.pitch, 0.04, 1) : -1);
   setItems('sectors', '.js-sectors', is('sectors') ? slot(progress.sectors, counts.sectors, 0.03, 1) : -1);
   setItems('process', '.js-process', is('process') ? slot(progress.process, counts.process, 0.03, 1) : -1);
 
@@ -152,19 +153,16 @@ function update(scroll, velocity) {
   reveal($('.js-contact'), cO);
   reveal($('.js-footer'), is('contact') ? clamp((progress.contact - 0.6) / 0.2) : 0, 0);
 
-  // the page takes its colours from the world the avatar is in
-  const scene = is('work') ? 'pink' : 'black';
-  if (document.documentElement.dataset.scene !== scene) {
-    document.documentElement.dataset.scene = scene;
-    $('meta[name="theme-color"]').setAttribute('content', scene === 'pink' ? '#ffccd8' : '#070708');
-  }
-
   stage?.setProgress({ ...progress, section: current, velocity });
 }
 
 lenis.on('scroll', (l) => update(l.scroll, l.velocity));
+const pitchLine = $('.js-statement-text');
 function raf(time) {
   lenis.raf(time);
+  // the sentence appears once the swarm has written the words (or right away without WebGL)
+  const on = current === 'pitch' && (stage ? stage.formed : progress.pitch > 0.1 && progress.pitch < 0.9);
+  if (pitchLine.classList.contains('is-active') !== on) pitchLine.classList.toggle('is-active', on);
   requestAnimationFrame(raf);
 }
 requestAnimationFrame(raf);
@@ -399,7 +397,7 @@ $('.js-lang').addEventListener('click', (e) => {
   tick();
   showStep(step, false);
   stage?.setContactSheet(contactSheet(isMobile()));
-  stage?.setTexts(swarmTexts());
+  stage?.setStatement(copy[lang].statement.words);
   stage?.glitch(1);
   update(lenis.scroll, 0);
 });
@@ -470,7 +468,8 @@ async function boot() {
         contactSheet: contactSheet(mobile),
         words: site.wallWords,
         photo: `${BASE}avatar.jpg`,
-        texts: swarmTexts(),
+        body: `${BASE}avatar-body.png`,
+        statement: copy[lang].statement.words,
         mobile,
         reducedMotion: reduced,
         instant: debug, // ?debug: skip the print-in so screenshots are deterministic
@@ -491,6 +490,7 @@ async function boot() {
   await preloader.done(reduced ? 300 : 1400);
   stage?.boot();
   lenis.start();
+  scramble($('.js-hero-title'), null, 1100);
   $$('.sec--hero .js-reveal').forEach((el, i) => {
     el.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], {
       duration: 900,

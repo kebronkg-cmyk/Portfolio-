@@ -1,11 +1,12 @@
 import {
+  AlwaysDepth,
   CanvasTexture,
   LinearFilter,
   LinearMipmapLinearFilter,
+  LinearSRGBColorSpace,
   Matrix3,
   Matrix4,
   Mesh,
-  NearestFilter,
   NoColorSpace,
   OrthographicCamera,
   PerspectiveCamera,
@@ -18,11 +19,9 @@ import {
   Vector3,
   WebGLRenderer,
   WebGLRenderTarget,
-  AlwaysDepth,
-  LinearSRGBColorSpace,
 } from 'three';
-import { FIGURE_FRAG } from './figureShader.js';
 import { COMPOSITE_FRAG } from './compositeShader.js';
+import { createFigure } from './figure.js';
 import { createRig } from './rig.js';
 import { createParticles, sampleText } from './particles.js';
 import { createPost } from './post.js';
@@ -36,6 +35,9 @@ const NEAR = 0.1;
 const FAR = 40;
 const WALL_Z = -7;
 const VERT = /* glsl */ `void main() { gl_Position = vec4(position.xy, 0., 1.); }`;
+
+/* how each poster enters, and when its "held out" phase begins within the cycle */
+const SHOW_AT = { spin: 0.52, side: 0.46, below: 0.44 };
 
 /* the three big words on the wall, each set to the full width */
 function wordsTexture(lines) {
@@ -72,14 +74,15 @@ function wordsTexture(lines) {
   return t;
 }
 
-export async function createStage({ canvas, projects, sheets, contactSheet, words, photo, texts, mobile, reducedMotion, instant, hq, onProgress }) {
+export async function createStage({ canvas, projects, sheets, contactSheet, words, photo, body, statement, mobile, reducedMotion, instant, onProgress }) {
   const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' });
   renderer.outputColorSpace = LinearSRGBColorSpace; // colours are authored display-referred
-  let dpr = Math.min(window.devicePixelRatio || 1, mobile ? 2 : 1.5);
+  let dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   let figScale = 1; // lowered by the fps watchdog on weak devices
 
   const N = projects.length;
   const CONTACT = N;
+  const kinds = projects.map((p, i) => p.entrance || (i === 0 ? 'spin' : i % 2 ? 'side' : 'below'));
   const rig = createRig({ mobile });
   onProgress?.(0.15);
 
@@ -100,7 +103,8 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
         () => res(null),
       ),
     );
-  const [photoTex, ...texes] = await Promise.all([load(photo), ...sheets.map(load)]);
+  const [photoTex, bodyTex, ...texes] = await Promise.all([load(photo), load(body), ...sheets.map(load)]);
+  if (!photoTex || !bodyTex) throw new Error('avatar textures missing');
   const contactTex = new CanvasTexture(contactSheet);
   contactTex.colorSpace = NoColorSpace;
   contactTex.minFilter = LinearFilter;
@@ -108,34 +112,13 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
   texes.push(contactTex);
   onProgress?.(0.55);
 
-  // ---- camera shared by both ray passes and the particle camera
+  // ---- one camera for everything
   const cam = { pos: new Vector3(), mat: new Matrix3(), tan: 0.354, aspect: 1 };
   const camU = { uCamPos: { value: cam.pos }, uCamMat: { value: cam.mat }, uTanFov: { value: cam.tan }, uAspect: { value: 1 } };
   const cam3 = new PerspectiveCamera(40, 1, NEAR, FAR);
 
-  const figMat = new ShaderMaterial({
-    uniforms: {
-      ...camU,
-      uRes: { value: new Vector2(1, 1) },
-      uSh: { value: rig.state.sh },
-      uEl: { value: rig.state.el },
-      uWr: { value: rig.state.wr },
-      uHand: { value: rig.state.hand },
-      uFing: { value: rig.state.fing },
-      uBody: { value: rig.state.body },
-      uLean: { value: 0 },
-      uTwist: { value: 0 },
-      uHead: { value: new Vector2() },
-      uBreath: { value: 0 },
-      uMaxT: { value: MAX_T },
-      tPhoto: { value: photoTex },
-      uPhotoOn: { value: photoTex ? 1 : 0 },
-    },
-    vertexShader: VERT,
-    fragmentShader: FIGURE_FRAG,
-    depthTest: false,
-    depthWrite: false,
-  });
+  const figure = createFigure({ photoTex, bodyTex, maxT: MAX_T });
+
   const compMat = new ShaderMaterial({
     uniforms: {
       ...camU,
@@ -149,7 +132,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
       uSheetSize: { value: new Vector2(rig.state.size[0], rig.state.size[1]) },
       uSheetOn: { value: 0 },
       uHover: { value: 0 },
-      uPink: { value: 0 },
+      uGlow: { value: 0 },
       uFigDim: { value: 1 },
       uWordsRect: { value: [0, 0, 1, 1] },
       uWordsOn: { value: 1 },
@@ -166,33 +149,26 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     depthFunc: AlwaysDepth,
     depthWrite: true,
   });
-  const quad = new Mesh(new PlaneGeometry(2, 2), figMat);
+  const quad = new Mesh(new PlaneGeometry(2, 2), compMat);
   quad.frustumCulled = false;
   const quadScene = new Scene();
   quadScene.add(quad);
   const ortho = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-  const figRT = new WebGLRenderTarget(4, 4, { type: UnsignedByteType, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: false });
+  const figRT = new WebGLRenderTarget(4, 4, { type: UnsignedByteType, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: true });
   figRT.texture.colorSpace = NoColorSpace;
   compMat.uniforms.tFig.value = figRT.texture;
   const mainRT = new WebGLRenderTarget(4, 4, { type: UnsignedByteType, minFilter: LinearFilter, magFilter: LinearFilter, depthBuffer: true });
   mainRT.texture.colorSpace = NoColorSpace;
 
-  // ---- particles
-  const particles = createParticles({ count: mobile ? 6000 : 12000 });
+  // ---- the swarm and its one sentence
+  const particles = createParticles({ count: mobile ? 7000 : 13000 });
   const pScene = new Scene();
   pScene.add(particles.points);
-  let targets = { pitch: [], sectors: [], process: [] };
-  function setTexts(t) {
-    const n = particles.points.geometry.attributes.position.count;
-    targets = {
-      pitch: t.pitch.map((lines) => sampleText(lines, n)),
-      sectors: t.sectors.map((w) => sampleText([w], n, '"Geist Variable", sans-serif', 900)),
-      process: t.process.map((w) => sampleText([w], n, '"Doto", monospace', 900)),
-    };
-    particles.setPair(null, null);
+  function setStatement(lines) {
+    particles.setText(sampleText(lines, particles.points.geometry.attributes.position.count));
   }
-  setTexts(texts);
+  setStatement(statement);
   onProgress?.(0.8);
 
   const post = createPost(renderer, mainRT.texture);
@@ -207,11 +183,10 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     const s = new Vector2();
     renderer.getDrawingBufferSize(s);
     mainRT.setSize(s.x, s.y);
-    // the avatar is ray-marched at a fixed, modest height – the scanline print hides the upscale
-    const fh = Math.round((mobile ? 400 : 430) * figScale);
+    // the avatar is drawn at a modest height – the scanline print hides the upscale
+    const fh = Math.round(Math.min(s.y, mobile ? 640 : 720) * figScale);
     const fw = Math.max(8, Math.round((fh * s.x) / s.y));
     figRT.setSize(fw, fh);
-    figMat.uniforms.uRes.value.set(fw, fh);
     compMat.uniforms.uFigRes.value.set(fw, fh);
     compMat.uniforms.uRes.value.copy(s);
     compMat.uniforms.uPitch.value = Math.max(3, Math.round(3.4 * (s.y / h)));
@@ -240,12 +215,13 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     running: true,
     glitch: 0,
     flash: 0,
-    pink: 0,
+    glow: 0,
+    form: 0,
     // smoothed camera parameters
     phi: 0,
-    dist: mobile ? 5.2 : 4.7,
+    dist: mobile ? 5.0 : 4.7,
     pan: 0,
-    look: mobile ? -0.55 : -0.3,
+    look: mobile ? -0.7 : -0.3,
     dim: 1,
     wordsOn: 1,
   };
@@ -254,48 +230,53 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
   function cameraGoal() {
     const s = state;
     const wide = cam.aspect > 1.05;
-    const g = { phi: 0, dist: wide ? 4.7 : 5.2, pan: 0, look: wide ? -0.3 : -0.55, dim: 1, words: 0 };
+    const g = { phi: 0, dist: wide ? 4.7 : 5.0, pan: 0, look: wide ? -0.3 : -0.7, dim: 1, words: 0 };
     switch (s.section) {
       case 'hero':
-        g.words = 1 - ramp(s.hero, 0.7, 1) * 0.4;
-        g.dist += -s.hero * 0.3;
+        g.words = 1 - ramp(s.hero, 0.6, 1) * 0.5;
+        g.dist -= s.hero * 0.35;
+        g.phi = (s.hero - 0.5) * 0.12;
         break;
       case 'pitch':
-        g.phi = lerp(-0.2, 0.2, s.pitch);
+        g.phi = lerp(-0.16, 0.16, s.pitch);
         g.dist = wide ? 5.2 : 5.9;
-        g.dim = lerp(1, 0.3, ramp(s.pitch, 0.02, 0.14)) + ramp(s.pitch, 0.9, 1) * 0.7;
-        g.words = (1 - ramp(s.pitch, 0.02, 0.16)) * 0.6;
+        g.look = wide ? -0.3 : -0.5;
+        g.dim = lerp(1, 0.28, ramp(s.pitch, 0.04, 0.16)) + ramp(s.pitch, 0.88, 1) * 0.72;
+        g.words = (1 - ramp(s.pitch, 0.02, 0.14)) * 0.5;
         break;
       case 'work': {
         const u = clamp(s.work, 0, 0.9999) * N;
-        const c = u - Math.floor(u);
-        // wide and low while he catches and spins, close and frontal when he shows
-        const show = ease(ramp(c, 0.42, 0.6)) * (1 - ease(ramp(c, 0.93, 1)));
-        g.phi = lerp(-0.2, 0, show);
-        g.dist = lerp(wide ? 4.6 : 5.6, wide ? 4.35 : 4.6, show);
-        g.look = lerp(wide ? -0.05 : 0.0, wide ? -0.36 : -0.74, show);
-        g.pan = lerp(0, wide ? -0.5 : 0, show);
+        const i = Math.floor(u);
+        const c = u - i;
+        const kind = kinds[i];
+        const at = SHOW_AT[kind];
+        const show = ease(ramp(c, at, at + 0.16)) * (1 - ease(ramp(c, 0.92, 1)));
+        // the entrance decides the wide shot; the close shot is the same for all
+        const entry =
+          kind === 'spin'
+            ? { phi: -0.2, dist: wide ? 4.6 : 5.6, look: wide ? -0.05 : 0.0, pan: 0 }
+            : kind === 'side'
+              ? { phi: 0.1, dist: wide ? 5.0 : 5.8, look: wide ? -0.35 : -0.55, pan: wide ? 0.55 : 0.25 }
+              : { phi: 0, dist: wide ? 4.8 : 5.6, look: wide ? -0.6 : -0.9, pan: 0 };
+        g.phi = lerp(entry.phi, 0, show);
+        g.dist = lerp(entry.dist, wide ? 4.35 : 4.6, show);
+        g.look = lerp(entry.look, wide ? -0.36 : -0.74, show);
+        g.pan = lerp(entry.pan, wide ? -0.5 : 0, show);
         break;
       }
       case 'sectors':
-        g.phi = wide ? 0.16 : 0;
-        g.pan = wide ? -1.25 : 0;
-        g.dist = wide ? 4.6 : 6.0;
-        g.look = wide ? -0.3 : -1.25;
-        g.dim = wide ? 1 : 0.75;
-        break;
       case 'process':
-        g.phi = wide ? -0.1 : 0;
+        g.phi = wide ? (s.section === 'sectors' ? 0.16 : -0.08) : 0;
         g.pan = wide ? -1.25 : 0;
-        g.dist = wide ? 4.6 : 6.0;
-        g.look = wide ? -0.3 : -1.25;
-        g.dim = wide ? 1 : 0.75;
+        g.dist = wide ? 4.6 : 6.4;
+        g.look = wide ? -0.3 : -0.78;
         break;
       default: {
-        const show = ease(ramp(s.contact, 0.35, 0.6));
-        g.phi = lerp(-0.18, 0, show);
-        g.dist = lerp(wide ? 4.6 : 5.6, wide ? 4.15 : 4.7, show);
-        g.look = lerp(wide ? -0.05 : 0, wide ? -0.46 : -0.78, show);
+        const at = SHOW_AT.below;
+        const c = Math.min(0.8, s.contact * 1.25);
+        const show = ease(ramp(c, at, at + 0.16));
+        g.dist = lerp(wide ? 4.8 : 5.6, wide ? 4.15 : 4.7, show);
+        g.look = lerp(wide ? -0.6 : -0.9, wide ? -0.46 : -0.78, show);
       }
     }
     return g;
@@ -339,53 +320,6 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     return Math.abs(lo.x + ld.x * t) < rig.state.size[0] / 2 && Math.abs(lo.y + ld.y * t) < rig.state.size[1] / 2;
   }
 
-  /* particles: which two formations are we between, and how far */
-  const centre = new Vector3();
-  function sequence(list, p, inAt, outAt) {
-    // dust → list[0] → … → list[n-1] → dust, spread over inAt … outAt
-    const n = list.length;
-    const u = ramp(p, inAt, outAt) * (n + 1); // 0..n+1
-    const i = Math.min(n, Math.floor(u));
-    const f = u - i;
-    const m = ease(ramp(f, 0.0, 0.42)); // move in the first part of each slot, then hold
-    return { a: i === 0 ? null : list[i - 1], b: i === n ? null : list[i], m, index: i === n ? n - 1 : m > 0.5 ? i : i - 1 };
-  }
-  function viewWidth(dist) {
-    return 2 * dist * cam.tan * cam.aspect;
-  }
-  function updateParticles(dt, time) {
-    const s = state;
-    const wide = cam.aspect > 1.05;
-    let seq = { a: null, b: null, m: 0 };
-    let place = null;
-    if (s.section === 'pitch') {
-      seq = sequence(targets.pitch, s.pitch, 0.04, 1.0);
-      const z = 1.5;
-      const vw = viewWidth((wide ? 5.2 : 5.9) - z);
-      place = { x: 0, y: state.look + (wide ? 0.12 : 0.35), z, scale: vw * (wide ? 0.8 : 0.9) };
-    } else if (s.section === 'sectors') {
-      seq = sequence(targets.sectors, s.sectors, 0.03, 1.0);
-      const z = wide ? -1.4 : 1.1; // phones: across the chest, in front of him
-      const vw = viewWidth((wide ? 4.6 : 6.0) - z);
-      place = wide ? { x: state.pan - vw * 0.17, y: state.look + vw * 0.13, z, scale: vw * 0.58 } : { x: 0, y: state.look + 0.55, z, scale: vw * 0.88 };
-    } else if (s.section === 'process') {
-      seq = sequence(targets.process, s.process, 0.03, 1.0);
-      const z = wide ? -1.4 : 1.1;
-      const vw = viewWidth((wide ? 4.6 : 6.0) - z);
-      place = wide ? { x: state.pan - vw * 0.2, y: state.look + vw * 0.1, z, scale: vw * 0.42 } : { x: 0, y: state.look + 0.55, z, scale: vw * 0.6 };
-    }
-    particles.setPair(seq.a, seq.b);
-    if (place) centre.set(place.x, place.y, place.z);
-    particles.setXf('a', seq.a ? centre : null, place?.scale || 1);
-    particles.setXf('b', seq.b ? centre : null, place?.scale || 1);
-    const u = particles.uniforms;
-    u.uMix.value = seq.m;
-    u.uTime.value = time;
-    u.uPink.value = state.pink;
-    u.uSize.value = mobile ? 0.9 : 1;
-    api.formation = seq.index ?? -1;
-  }
-
   let last = performance.now();
   let time = 0;
   let raf = 0;
@@ -409,10 +343,10 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
       api.fps = fps;
       frames = 0;
       fpsT = 0;
-      if (fps < 38 && !hq) {
+      if (fps < 40) {
         if (++low >= 2 || fps < 12) {
-          if (figScale > 0.5) figScale = Math.max(0.45, figScale - (fps < 12 ? 0.3 : 0.15));
-          else if (dpr > 1) dpr = Math.max(1, dpr - 0.5);
+          if (figScale > 0.6) figScale = Math.max(0.55, figScale - 0.2);
+          else if (dpr > 1) dpr = Math.max(1, dpr - 0.25);
           resize();
           low = 0;
         }
@@ -424,21 +358,24 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     if (idle) state.pointer.set(Math.sin(time * 0.42) * 0.4, Math.sin(time * 0.27 + 1) * 0.22);
     state.ps.lerp(state.pointer, Math.min(1, dt * (idle ? 1.2 : 4)));
 
-    // ---- which poster, and where in its cycle
+    // ---- which poster, how it enters, and where in its cycle
     let want = -1,
       s = 0,
+      kind = 'below',
       extra = null;
     if (state.section === 'work') {
       const u = clamp(state.work, 0, 0.9999) * N;
       want = Math.floor(u);
       s = u - want;
+      kind = kinds[want];
     } else if (state.section === 'contact') {
       want = CONTACT;
-      s = Math.min(0.8, state.contact * 1.25); // comes in, gets shown, stays
+      s = Math.min(0.8, state.contact * 1.25); // comes up, gets shown, stays
       extra = { show: mobile ? [0, 0.12, 0.12] : [0, 0.06, 0.16], step: 0.1 };
     }
     const present = state.section === 'sectors' || state.section === 'process' ? 1 : 0;
-    const r = rig.update(reducedMotion ? 0.05 : dt, time, want, s, state.ps, extra, present);
+    const r = rig.update(reducedMotion ? 0.05 : dt, time, want, s, kind, state.ps, extra, present);
+    figure.update(r);
     const shown = r.shown;
     if (texes[shown] && compMat.uniforms.tSheet.value !== texes[shown]) compMat.uniforms.tSheet.value = texes[shown];
     if (shown !== state.active && shown < N && state.section === 'work') {
@@ -455,17 +392,15 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     state.look += (g.look - state.look) * k;
     state.dim += (g.dim - state.dim) * Math.min(1, dt * 4);
     state.wordsOn += (g.words - state.wordsOn) * Math.min(1, dt * 4);
-    const pinkT = state.section === 'work' ? 1 : 0;
-    state.pink += (pinkT - state.pink) * Math.min(1, dt * 5);
+    state.glow += ((state.section === 'work' ? 1 : 0) - state.glow) * Math.min(1, dt * 3);
     setCamera();
 
     const wide = cam.aspect > 1.05;
-    const ww = wide ? 12.4 : 4.9;
-    const wh = ww * 0.5;
     const cu = compMat.uniforms;
-    cu.uWordsRect.value = [-ww / 2, (wide ? 0.0 : 1.5) - wh / 2, ww, wh];
+    // desktop: three lines across the wall; phones: the same block, stretched tall, filling the screen
+    cu.uWordsRect.value = wide ? [-6.2, -3.1, 12.4, 6.2] : [-2.35, -2.6, 4.7, 7.2];
     cu.uWordsOn.value = state.wordsOn;
-    cu.uPink.value = state.pink;
+    cu.uGlow.value = state.glow;
     cu.uFigDim.value = state.dim;
     cu.uSheetInv.value.copy(r.sheetInverse);
     cu.uSheetOn.value = r.sheetAlpha;
@@ -475,37 +410,39 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
     if (state.introStart >= 0) intro = instant ? 1 : clamp((time - state.introStart) / 1.5);
     cu.uIntro.value = intro;
 
-    const fu = figMat.uniforms;
-    fu.uLean.value = r.lean;
-    fu.uTwist.value = r.twist;
-    fu.uHead.value.set(r.head[0], r.head[1]);
-    fu.uBreath.value = r.breath;
+    // ---- the one sentence: it assembles by itself once you are there (and lets go when you leave)
+    const here = state.section === 'pitch' && state.pitch > 0.1 && state.pitch < 0.86;
+    state.form = clamp(state.form + (here ? dt / (reducedMotion ? 0.3 : 2.4) : -dt / 0.7));
+    const z = 1.4;
+    const vw = 2 * ((wide ? 5.2 : 5.9) - z) * cam.tan * cam.aspect;
+    const pu = particles.uniforms;
+    pu.uXf.value.set(0, (wide ? -0.3 : -0.5) + (wide ? 0.1 : 0.45), z, vw * (wide ? 0.78 : 0.9));
+    pu.uForm.value = state.form;
+    pu.uTime.value = time;
+    pu.uSize.value = mobile ? 0.9 : 1;
+    api.formed = state.form > 0.86;
 
-    updateParticles(dt, time);
     api.presenting = r.presenting * r.sheetAlpha;
-    api.scene = state.section === 'work' ? 'pink' : 'black';
 
     // ---- post
     state.glitch *= Math.pow(0.02, dt);
     state.flash *= Math.pow(0.004, dt);
-    if (!reducedMotion && Math.random() < dt * 0.18) state.glitch = Math.max(state.glitch, 0.2 + Math.random() * 0.25);
-    const pu = post.material.uniforms;
-    pu.uTime.value = time;
-    pu.uGlitch.value = reducedMotion ? 0 : state.glitch;
-    pu.uFlash.value = reducedMotion ? 0 : state.flash;
-    pu.uPink.value = state.pink;
+    if (!reducedMotion && Math.random() < dt * 0.15) state.glitch = Math.max(state.glitch, 0.2 + Math.random() * 0.25);
+    const po = post.material.uniforms;
+    po.uTime.value = time;
+    po.uGlitch.value = reducedMotion ? 0 : state.glitch;
+    po.uFlash.value = reducedMotion ? 0 : state.flash;
     const vel = reducedMotion ? 0 : clamp(state.velocity / 60, -1, 1);
-    pu.uVelocity.value += (vel - pu.uVelocity.value) * Math.min(1, dt * 6);
-    if (state.introStart >= 0) pu.uPower.value = clamp((time - state.introStart) / 0.35);
+    po.uVelocity.value += (vel - po.uVelocity.value) * Math.min(1, dt * 6);
+    if (state.introStart >= 0) po.uPower.value = clamp((time - state.introStart) / 0.35);
 
-    // pass 1: avatar, small
-    quad.material = figMat;
+    // pass 1: avatar (plain geometry) into its own small picture
     renderer.setRenderTarget(figRT);
-    renderer.render(quadScene, ortho);
-    // pass 2: wall + avatar print + poster (writes depth), then the swarm on top of it
-    quad.material = compMat;
-    renderer.setRenderTarget(mainRT);
+    renderer.setClearColor(0x000000, 0);
     renderer.autoClear = true;
+    renderer.render(figure.scene, cam3);
+    // pass 2: wall + avatar print + poster (writes depth), then the swarm on top of it
+    renderer.setRenderTarget(mainRT);
     renderer.render(quadScene, ortho);
     renderer.autoClear = false;
     renderer.render(pScene, cam3);
@@ -522,9 +459,8 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
   const api = {
     fps: 60,
     aspect: 1,
-    scene: 'black',
     presenting: 0,
-    formation: -1,
+    formed: false,
     onActive: null,
     start() {
       last = performance.now();
@@ -536,10 +472,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
       state.glitch = 1;
     },
     setProgress(p) {
-      if (p.section !== state.section) {
-        state.glitch = Math.max(state.glitch, 0.9);
-        if (p.section === 'work' || state.section === 'work') state.flash = Math.max(state.flash, 0.35);
-      }
+      if (p.section !== state.section) state.glitch = Math.max(state.glitch, 0.8);
       Object.assign(state, p);
     },
     setPointer(x, y) {
@@ -562,7 +495,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
       contactTex.image = c;
       contactTex.needsUpdate = true;
     },
-    setTexts,
+    setStatement,
     destroy() {
       cancelAnimationFrame(raf);
       renderer.dispose();

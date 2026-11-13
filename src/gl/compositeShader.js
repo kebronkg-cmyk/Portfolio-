@@ -1,4 +1,12 @@
-import { CAMERA_GLSL } from './figureShader.js';
+const CAMERA_GLSL = /* glsl */ `
+  uniform vec3 uCamPos;
+  uniform mat3 uCamMat;   // columns: right, up, forward
+  uniform float uTanFov;
+  uniform float uAspect;
+  vec3 rayDir(vec2 ndc) {
+    return normalize(uCamMat[2] + ndc.x * uAspect * uTanFov * uCamMat[0] + ndc.y * uTanFov * uCamMat[1]);
+  }
+`;
 
 /* Full-resolution picture: the wall behind the avatar (a quadtree of nested
    rectangles that also spells the big words; or flowing pink marble), the
@@ -17,7 +25,7 @@ export const COMPOSITE_FRAG = /* glsl */ `
   uniform vec2 uSheetSize;
   uniform float uSheetOn;
   uniform float uHover;
-  uniform float uPink;        // 0 = black world, 1 = pink marble world
+  uniform float uGlow;        // 0…1: how alive the wall's grid is (rises in the work section)
   uniform float uFigDim;
   uniform vec4 uWordsRect;    // x, y (lower left), w, h on the wall
   uniform float uWordsOn;
@@ -37,24 +45,6 @@ export const COMPOSITE_FRAG = /* glsl */ `
   float sdRound(vec2 p, vec2 b, float r) {
     vec2 q = abs(p) - b + r;
     return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r;
-  }
-
-  // ---- liquid marble in the user's pinks
-  float wave(vec2 p, float s) {
-    return sin(p.x * 1.3 + s + 1.4 * sin(p.y * .9 + s * 1.7)) * cos(p.y * 1.2 - s * .6 + 1.2 * sin(p.x * .8 + s));
-  }
-  float fbm(vec2 p, float s) {
-    return wave(p, s) + .45 * wave(p * 1.8, s + 2.) + .2 * wave(p * 3.3, s + 5.);
-  }
-  vec3 marble(vec2 p) {
-    float t = uTime * .045;
-    vec2 q = vec2(fbm(p, 1. + t), fbm(p + vec2(5.2, 1.3), 2. - t));
-    vec2 r = vec2(fbm(p + 2.2 * q + vec2(1.7, 9.2), 3. + t * .7), fbm(p + 2.2 * q + vec2(8.3, 2.8), 4.));
-    float f = fbm(p + 2. * r, 5.) * .32 + .5;
-    vec3 c = mix(DEEP, PINK, smoothstep(.0, .5, f));
-    c = mix(c, PALE, smoothstep(.5, 1., f));
-    float vein = pow(abs(sin(f * 9. + r.x * 1.5)), 10.);
-    return mix(c, vec3(1., .965, .973), vein * .5);
   }
 
   // ---- quadtree wall: cells split where the words' edges are (and here and there at random)
@@ -86,7 +76,9 @@ export const COMPOSITE_FRAG = /* glsl */ `
     float flick = .82 + .18 * sin(uTime * (1. + id * 3.) + id * 40.);
     float body = fill * flick + (1. - fill) * step(.93, id) * .07;
     lit = fill;
-    vec3 col = INK + PINK * (body * (1. - edge * .55) + edge * mix(.2, .0, fill));
+    float scan = smoothstep(.9, 0., abs(fract(p.y * .06 - uTime * .07) - .5) * 9.);
+    float grid = edge * mix(.16, .0, fill) * (1. + uGlow * 1.4 + scan * 1.6);
+    vec3 col = INK + PINK * (body * (1. - edge * .55) * (1. + scan * .25) + grid) + PINK * scan * (1. - fill) * step(.8, id) * .1;
     return col;
   }
 
@@ -106,7 +98,6 @@ export const COMPOSITE_FRAG = /* glsl */ `
     vec2 wp = uCamPos.xy + rd.xy * tW;
     float lit;
     vec3 col = wall(wp, lit);
-    if (uPink > .001) col = mix(col, marble(wp * .22), uPink);
     float tBest = 1e9;
 
     // ---- avatar: phosphor scanlines, thicker where the picture is brighter
@@ -155,7 +146,7 @@ export const COMPOSITE_FRAG = /* glsl */ `
       }
       // rim: pink on black, black on pink
       float rim = smoothstep(aa2 * 3., 0., abs(sd + aa2 * 1.5));
-      sc = mix(sc, mix(PINK, INK, uPink), rim);
+      sc = mix(sc, PINK, rim);
       col = mix(col, sc, sheetA);
       tBest = tS;
     }

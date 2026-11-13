@@ -10,16 +10,20 @@
 - Einmalige Einstellungen (erledigt): Pages-Source „GitHub Actions“; Environment `github-pages`
   erlaubt `claude/**`.
 
-## Design-Leitplanken (vom User, Stand Version 5)
-- Farben: **viel Schwarz und Pink** (sein Pink: `#ffccd8`, als fließender Marmor). Wichtiges kontrastreich.
-- Herzstück: er selbst als Avatar (`public/avatar.jpg` auf Kopf/Torso projiziert). Die Plakate
-  fliegen an, kreisen auf dem Finger, werden groß gezeigt und weggeschleudert. Bewegung soll
-  menschlich und flüssig sein, kein Schritt darf beim normalen Scrollen übersprungen werden.
-- Wand-Schrift aus verschachtelten Rechtecken, Partikel („Nanobots“) formen Aussagen.
-- Röhren-Look und Übergänge wie bei Version 1 / der Referenz (fojcikdominik.com).
+## Design-Leitplanken (vom User, Stand Version 6)
+- **Alles dunkel**: Schwarz als Basis, Akzente in Weiß und seinem Rosa (`#ffccd8`). Kein Marmor, keine Verläufe.
+- Avatar = er selbst: Kopf, Hals, Oberkörper sind sein ausgeschnittenes Foto als Relief
+  (`public/avatar.jpg` + `public/avatar-body.png`), nur Arme/Hände sind modelliert. Muss wie ein
+  normaler Mensch mit echten Proportionen aussehen.
+- Plakate: **nur die Pizza (Projekt 1) kreist auf dem Finger**; die anderen holt er von rechts
+  oder hebt sie mit Bücken von unten hoch (`entrance` pro Projekt in `content.js` überschreibbar).
+- Partikel („Nanobots“) **nur einmal**: Zeichen-Chaos, das sich von selbst zu einem Satz formt.
+  Aussage ernsthaft und vertrauensbildend, keine flapsigen Sprüche.
+- Muss so flüssig laufen wie Version 1: keine teuren Berechnungen pro Bildpunkt für den Avatar
+  (deshalb normale Geometrie statt Raymarching). Handy zuerst prüfen.
+- Vibe von Version 1 / Referenz: Röhren-Look, flackernde Zeichen, Wand aus verschachtelten Rechtecken.
 - Ziel der Seite: Anfragen (Formular in drei Schritten). Projekte nur als beste Ausschnitte.
-- Plakate und Schild groß, aber immer vollständig sichtbar; am Handy besonders prüfen.
 - Installierte Skills (`.claude/skills/`): Emil Kowalskis Animations-Skills und Impeccable.
   Erst ausführen, wenn der User es sagt. Sein eigener „Google-Skill“ wurde noch nicht gefunden.
-- Testen: Die Umgebung hat keine Grafikkarte (Software-WebGL, wenige Bilder pro Sekunde).
-  Mit `?debug` und langen Wartezeiten prüfen, `?debug&hq` für volle Avatar-Qualität.
+- Testen: Die Umgebung hat keine Grafikkarte. `npm run build`, dann `npx vite preview --port 4173`
+  nur kurz im selben Befehl starten, mit `?debug` prüfen (Skripte liegen im Scratchpad der Sitzung).

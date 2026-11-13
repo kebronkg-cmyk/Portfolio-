@@ -42,10 +42,11 @@ export function applyLang(lang) {
   all('.js-logo, .js-logo-text', (el) => (el.textContent = site.logo));
   all('.js-year', (el) => (el.textContent = site.year));
 
-  // the swarm writes these words; the DOM keeps them for screen readers and shows one sentence each
-  $('.js-pitch').innerHTML = c.pitch
-    .map((p, i) => `<article class="pitch__item" data-index="${i}"><h2 class="sr-only">${esc(p.words.join(' '))}</h2><p class="pitch__line">${esc(p.line)}</p></article>`)
-    .join('');
+  $('.js-hero-title').innerHTML = c.heroTitle.map((l) => `<span>${esc(l)}</span>`).join('');
+  $('.js-hero-meta').innerHTML = [...c.heroMeta, String(site.year)].map((l) => `<li>${esc(l)}</li>`).join('');
+  // the swarm writes the words; the DOM keeps them for screen readers and shows the sentence
+  $('.js-statement-words').textContent = c.statement.words.join(' ');
+  $('.js-statement-text').textContent = c.statement.text;
 
   $('.js-work-list').innerHTML = projects
     .map((p, i) => `<li data-index="${i}"><button data-index="${i}"><span>${pad(i + 1)}&ensp;${esc(p.title)}</span></button></li>`)
@@ -58,8 +59,13 @@ export function applyLang(lang) {
           `<article class="step-item" data-index="${i}"><p class="label"><b>${pad(i + 1)}</b> — ${esc(label(s))}</p><h3>${esc(s.title)}</h3><p>${esc(text(s))}</p></article>`,
       )
       .join('') + `<ol class="steps__dots" aria-hidden="true">${list.map(() => '<li></li>').join('')}</ol>`;
-  $('.js-sectors').innerHTML = items((s) => `${c.sectorsLabel} · ${s.name}`, c.sectors, (s) => s.text);
-  $('.js-process').innerHTML = items(() => c.processLabel, c.process, (s) => s.text);
+  const fill = (sel, html) => {
+    const root = $(sel);
+    root.querySelectorAll('.step-item, .steps__dots').forEach((el) => el.remove());
+    root.insertAdjacentHTML('beforeend', html);
+  };
+  fill('.js-sectors', items((s) => `${c.sectorsLabel} · ${s.name}`, c.sectors, (s) => s.text));
+  fill('.js-process', items(() => c.processLabel, c.process, (s) => s.text));
 
   $('.js-contact-title').textContent = c.contactTitle.join(' ');
 

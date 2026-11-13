@@ -39,22 +39,31 @@ export function applyLang(lang) {
   $('meta[name="description"]')?.setAttribute('content', c.metaDescription);
 
   all('[data-i18n]', (el) => (el.textContent = t(lang, el.dataset.i18n)));
-  all('.js-name, .js-fullname', (el) => (el.textContent = site.fullName));
+  all('.js-logo, .js-logo-text', (el) => (el.textContent = site.logo));
   all('.js-year', (el) => (el.textContent = site.year));
-  all('.js-about-label', (el, i) => (el.textContent = c.aboutLabel[i]));
 
-  const email = $('.js-email');
-  email.textContent = site.email;
-  email.href = 'mailto:' + site.email;
+  // the swarm writes these words; the DOM keeps them for screen readers and shows one sentence each
+  $('.js-pitch').innerHTML = c.pitch
+    .map((p, i) => `<article class="pitch__item" data-index="${i}"><h2 class="sr-only">${esc(p.words.join(' '))}</h2><p class="pitch__line">${esc(p.line)}</p></article>`)
+    .join('');
 
   $('.js-work-list').innerHTML = projects
     .map((p, i) => `<li data-index="${i}"><button data-index="${i}"><span>${pad(i + 1)}&ensp;${esc(p.title)}</span></button></li>`)
     .join('');
-  $('.js-sectors').innerHTML = c.sectors.map(([a, b]) => `<li><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join('');
-  $('.js-process').innerHTML = c.process.map(([a, b], i) => `<li><i>${pad(i + 1)}</i><b>${esc(a)}</b><span>${esc(b)}</span></li>`).join('');
+
+  const items = (label, list, text) =>
+    list
+      .map(
+        (s, i) =>
+          `<article class="step-item" data-index="${i}"><p class="label"><b>${pad(i + 1)}</b> — ${esc(label(s))}</p><h3>${esc(s.title)}</h3><p>${esc(text(s))}</p></article>`,
+      )
+      .join('') + `<ol class="steps__dots" aria-hidden="true">${list.map(() => '<li></li>').join('')}</ol>`;
+  $('.js-sectors').innerHTML = items((s) => `${c.sectorsLabel} · ${s.name}`, c.sectors, (s) => s.text);
+  $('.js-process').innerHTML = items(() => c.processLabel, c.process, (s) => s.text);
+
   $('.js-contact-title').textContent = c.contactTitle.join(' ');
 
-  const targets = ['#top', '#work', '#about', '#contact'];
+  const targets = ['#top', '#work', '#sectors', '#process', '#contact'];
   $('.js-menu-nav').innerHTML = c.nav
     .map((label, i) => `<li><a href="${targets[i]}" style="--i:${i}">${esc(label)}<small>${pad(i + 1)}</small></a></li>`)
     .join('');
@@ -69,7 +78,6 @@ export function applyLang(lang) {
     list.map((x, i) => `<label><input type="radio" name="${name}" value="${esc(x)}" ${i === checked ? 'checked' : ''}/><span>${esc(x)}</span></label>`).join('');
   $('.js-needs').innerHTML = chips('need', c.form.needs, -1);
   $('.js-budgets').innerHTML = chips('budget', c.form.budgets, c.form.budgets.length - 1);
-
   all('.js-step-title', (el, i) => (el.textContent = c.form.steps[i]));
 
   const ls = $('.js-lang');

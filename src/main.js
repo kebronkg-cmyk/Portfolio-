@@ -8,6 +8,7 @@ const BASE = import.meta.env.BASE_URL;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ramp = (x, a, b) => clamp((x - a) / (b - a));
 const pad = (n) => String(n).padStart(2, '0');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isMobile = () => innerWidth < 860;
@@ -18,10 +19,9 @@ applyLang(lang);
 
 const preloader = createPreloader();
 const cursor = createCursor();
-
 const imageUrls = (i) => projects[i].images.map((f) => `${BASE}projects/${projects[i].slug}/${f}`);
 
-/* The last sheet the giant holds up: the invitation to get in touch. */
+/* The sign he holds up at the end: black, with the invitation in pink. */
 function contactSheet(mobile) {
   const c = document.createElement('canvas');
   c.width = mobile ? 900 : 1600;
@@ -30,40 +30,48 @@ function contactSheet(mobile) {
   const W = c.width,
     H = c.height;
   const k = copy[lang];
-  ctx.fillStyle = '#0b0b0c';
+  ctx.fillStyle = '#070708';
   ctx.fillRect(0, 0, W, H);
   const m = W * 0.07;
-  ctx.fillStyle = '#f3c3d0';
-  ctx.font = `500 ${W * 0.019}px "Geist Mono", monospace`;
+  ctx.fillStyle = '#ffccd8';
+  ctx.font = `500 ${W * (mobile ? 0.03 : 0.019)}px "Geist Mono", monospace`;
   ctx.textBaseline = 'top';
-  ctx.fillText((k.nav[3] || 'Kontakt').toUpperCase() + ' — ' + site.fullName.toUpperCase(), m, m);
+  ctx.fillText(`${k.contactLabel} — ${site.logo}`.toUpperCase(), m, m);
   ctx.textAlign = 'right';
   ctx.fillText('→', W - m, m);
   ctx.textAlign = 'left';
-  let size = mobile ? W * 0.135 : W * 0.098;
-  ctx.font = `640 ${size}px "Geist Variable", sans-serif`;
+  let size = mobile ? W * 0.15 : W * 0.105;
+  const font = () => (ctx.font = `680 ${size}px "Geist Variable", sans-serif`);
+  font();
   const widest = Math.max(...k.contactTitle.map((l) => ctx.measureText(l).width));
   if (widest > W - m * 2) size *= (W - m * 2) / widest;
-  ctx.font = `640 ${size}px "Geist Variable", sans-serif`;
+  font();
   ctx.textBaseline = 'alphabetic';
-  const y0 = H * (mobile ? 0.42 : 0.5);
+  const y0 = H * (mobile ? 0.44 : 0.52);
   k.contactTitle.forEach((l, i) => {
-    ctx.fillStyle = i === k.contactTitle.length - 1 ? '#f3c3d0' : '#fbf7f5';
+    ctx.fillStyle = i === k.contactTitle.length - 1 ? '#ffccd8' : '#fde6ea';
     ctx.fillText(l, m - size * 0.04, y0 + i * size * 1.02);
   });
-  ctx.fillStyle = '#fbf7f5';
+  ctx.fillStyle = '#fde6ea';
   ctx.globalAlpha = 0.7;
-  ctx.font = `400 ${W * (mobile ? 0.04 : 0.021)}px "Geist Variable", sans-serif`;
+  ctx.font = `400 ${W * (mobile ? 0.042 : 0.022)}px "Geist Variable", sans-serif`;
   ctx.fillText(k.contactSub, m, H - m - W * 0.01);
   ctx.globalAlpha = 1;
   return c;
 }
+const swarmTexts = () => ({
+  pitch: copy[lang].pitch.map((p) => p.words),
+  sectors: copy[lang].sectors.map((s) => s.word),
+  process: copy[lang].process.map((s) => s.word),
+});
 
 /* ---------------------------------------------------------------------------
-   Layout
+   Layout: section lengths follow the amount of content
    --------------------------------------------------------------------------- */
 const N = projects.length;
-$('.sec--work').style.setProperty('--len', 40 + N * 150);
+const counts = { pitch: copy[lang].pitch.length, sectors: copy[lang].sectors.length, process: copy[lang].process.length };
+$('.sec--work').style.setProperty('--len', 40 + N * 190);
+$('.sec--sectors').style.setProperty('--len', 60 + counts.sectors * 62);
 $('.js-card-total').textContent = pad(N);
 
 /* ---------------------------------------------------------------------------
@@ -95,8 +103,8 @@ addEventListener('resize', () => {
 let stage = null;
 let current = 'hero';
 let activeProject = 0;
-let aboutStep = -1;
-const progress = { hero: 0, work: 0, about: 0, contact: 0 };
+const shownIndex = { pitch: -2, sectors: -2, process: -2 };
+const progress = { hero: 0, pitch: 0, work: 0, sectors: 0, process: 0, contact: 0 };
 
 const fade = (p, a, b, edge = 0.05) => clamp((p - a) / edge) * clamp((b - p) / edge);
 function reveal(el, o, dist = 20) {
@@ -104,6 +112,23 @@ function reveal(el, o, dist = 20) {
   el.style.opacity = o.toFixed(3);
   el.style.transform = o >= 0.999 ? '' : `translate3d(0, ${((1 - o) * dist).toFixed(1)}px, 0)`;
   el.style.visibility = o < 0.01 ? 'hidden' : '';
+}
+
+/* Which item of a "one at a time" section is up — same timing as the swarm in gl/stage.js */
+function slot(p, n, inAt, outAt) {
+  const u = ramp(p, inAt, outAt) * (n + 1);
+  const i = Math.min(n, Math.floor(u));
+  const f = u - i;
+  if (i === n) return f < 0.2 ? n - 1 : -1; // last one leaves
+  return f > 0.2 ? i : i - 1;
+}
+function setItems(key, root, idx) {
+  if (shownIndex[key] === idx) return;
+  shownIndex[key] = idx;
+  $$(`${root} [data-index]`).forEach((el) => el.classList.toggle('is-active', +el.dataset.index === idx));
+  $$(`${root} .steps__dots li`).forEach((el, i) => el.classList.toggle('is-active', i === idx));
+  const dots = $(`${root} .steps__dots`);
+  if (dots) dots.style.opacity = idx < 0 ? 0 : 1;
 }
 
 function update(scroll, velocity) {
@@ -114,33 +139,27 @@ function update(scroll, velocity) {
   }
   const is = (n) => current === n;
 
-  $$('.sec--hero .js-reveal').forEach((el) => reveal(el, is('hero') ? 1 - clamp((progress.hero - 0.25) / 0.25) : 0, -20));
+  $$('.sec--hero .js-reveal').forEach((el) => reveal(el, is('hero') ? 1 - clamp((progress.hero - 0.3) / 0.25) : 0, -20));
 
-  const inWork = is('work') ? fade(progress.work, 0.015, 0.985, 0.025) : 0;
+  setItems('pitch', '.js-pitch', is('pitch') ? slot(progress.pitch, counts.pitch, 0.04, 1) : -1);
+  setItems('sectors', '.js-sectors', is('sectors') ? slot(progress.sectors, counts.sectors, 0.03, 1) : -1);
+  setItems('process', '.js-process', is('process') ? slot(progress.process, counts.process, 0.03, 1) : -1);
+
+  const inWork = is('work') ? fade(progress.work, 0.012, 0.988, 0.02) : 0;
   $$('.js-work-ui').forEach((el) => reveal(el, inWork));
 
-  const a = progress.about;
-  const step = is('about') && a > 0.06 && a < 0.97 ? Math.min(2, Math.floor(((a - 0.06) / 0.91) * 3)) : -1;
-  if (step !== aboutStep) {
-    aboutStep = step;
-    $$('.about__step').forEach((el) => el.classList.toggle('is-active', +el.dataset.step === step));
-  }
-
-  const cO = is('contact') ? clamp((progress.contact - 0.55) / 0.2) : 0;
+  const cO = is('contact') ? clamp((progress.contact - 0.5) / 0.15) : 0;
   reveal($('.js-contact'), cO);
-  reveal($('.js-footer'), clamp((progress.contact - 0.7) / 0.2) * (is('contact') ? 1 : 0), 0);
+  reveal($('.js-footer'), is('contact') ? clamp((progress.contact - 0.6) / 0.2) : 0, 0);
 
-  stage?.setProgress({ ...progress, section: current, velocity });
-  syncScene();
-}
-
-/* the DOM takes its colours from the scene the giant is in */
-function syncScene() {
-  const scene = { hero: 'white', work: 'rose', about: 'white', contact: 'black' }[current];
+  // the page takes its colours from the world the avatar is in
+  const scene = is('work') ? 'pink' : 'black';
   if (document.documentElement.dataset.scene !== scene) {
     document.documentElement.dataset.scene = scene;
-    $('meta[name="theme-color"]').setAttribute('content', { white: '#fbf7f5', rose: '#f3c3d0', black: '#0b0b0c' }[scene]);
+    $('meta[name="theme-color"]').setAttribute('content', scene === 'pink' ? '#ffccd8' : '#070708');
   }
+
+  stage?.setProgress({ ...progress, section: current, velocity });
 }
 
 lenis.on('scroll', (l) => update(l.scroll, l.velocity));
@@ -151,7 +170,7 @@ function raf(time) {
 requestAnimationFrame(raf);
 
 /* anchors: land inside each section where its content is up */
-const LAND = { hero: 0, work: 0.1, about: 0.12, contact: 0.85 };
+const LAND = { hero: 0, work: 0.02, sectors: 0.14, process: 0.2, contact: 0.8 };
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="#"]');
   if (!a) return;
@@ -159,7 +178,7 @@ document.addEventListener('click', (e) => {
   closeMenu();
   const el = $(a.getAttribute('href'));
   const s = sections.find((x) => x.el === el) || sections[0];
-  lenis.scrollTo(a.getAttribute('href') === '#top' ? 0 : s.top + s.len * (LAND[s.name] ?? 0.2), { duration: 2.2 });
+  lenis.scrollTo(a.getAttribute('href') === '#top' ? 0 : s.top + s.len * (LAND[s.name] ?? 0.2), { duration: 2.4 });
 });
 $('.js-back').addEventListener('click', () => lenis.scrollTo(0, { duration: 3 }));
 
@@ -174,6 +193,7 @@ function setActive(i) {
   $('.js-card-title').textContent = p.title;
   $('.js-card-kind').textContent = `${p.kind?.[lang] ?? ''} — ${p.year}`;
   $('.js-card-info').textContent = p.info[lang] ?? p.info.de;
+  if (!stage) $('.js-card-thumb').src = imageUrls(i)[0];
   const card = $('.js-work-card');
   card.classList.remove('is-switching');
   void card.offsetWidth;
@@ -185,8 +205,8 @@ document.addEventListener('click', (e) => {
   const b = e.target.closest('.js-work-list button');
   if (!b) return;
   const s = sections.find((x) => x.name === 'work');
-  // land where this project's sheet is held out
-  lenis.scrollTo(s.top + s.len * ((+b.dataset.index + 0.8) / N), { duration: 1.8 });
+  // land where this project's poster is held out
+  lenis.scrollTo(s.top + s.len * ((+b.dataset.index + 0.78) / N), { duration: 2 });
 });
 $('.js-card-open').addEventListener('click', () => openProject(activeProject));
 
@@ -205,6 +225,7 @@ function makeOverlay(el, focus) {
       el.classList.add('is-open');
       el.setAttribute('aria-hidden', 'false');
       lenis.stop();
+      stage?.glitch(0.7);
       setTimeout(() => $(focus, el)?.focus?.(), 60);
     },
     close(silent) {
@@ -223,10 +244,10 @@ function makeOverlay(el, focus) {
 
 const menuBtn = $('.js-menu-open');
 const menu = makeOverlay($('#menu'), '.js-menu-close');
-const closeMenu = () => {
+function closeMenu() {
   menu.close();
   menuBtn.setAttribute('aria-expanded', 'false');
-};
+}
 menuBtn.addEventListener('click', () => {
   menu.open();
   menuBtn.setAttribute('aria-expanded', 'true');
@@ -289,7 +310,7 @@ $('.project__frame').addEventListener('pointerup', (e) => {
   sx = null;
 });
 
-// contact form — every button on the page leads here
+// enquiry form — every button on the page leads here
 const form = $('.js-form');
 const modal = makeOverlay($('.js-form-modal'), '.js-form-close');
 document.addEventListener('click', (e) => {
@@ -299,6 +320,7 @@ document.addEventListener('click', (e) => {
   }
 });
 $('.js-form-close').addEventListener('click', () => modal.close());
+modal.el.addEventListener('click', (e) => e.target === modal.el && modal.close());
 
 /* one thing at a time: need → idea & budget → contact details */
 let step = 0;
@@ -316,7 +338,6 @@ function showStep(n, focus = true) {
 showStep(0, false);
 $('.js-step-next').addEventListener('click', () => showStep(step + 1));
 $('.js-step-back').addEventListener('click', () => showStep(step - 1));
-// picking what you need moves straight on
 $('.js-needs').addEventListener('change', () => setTimeout(() => showStep(1), 180));
 form.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.tagName === 'INPUT' && step < 2) {
@@ -324,7 +345,6 @@ form.addEventListener('keydown', (e) => {
     showStep(step + 1);
   }
 });
-modal.el.addEventListener('click', (e) => e.target === modal.el && modal.close());
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const status = $('.js-form-status');
@@ -336,7 +356,7 @@ form.addEventListener('submit', async (e) => {
   const data = { need: '', budget: '', message: '', ...Object.fromEntries(new FormData(form)) };
   const f = copy[lang].form;
   if (!site.formEndpoint) {
-    const body = `${data.message}\n\n${f.need}: ${data.need}\n${f.budget}: ${data.budget}\n\n— ${data.name}${data.company ? ' (' + data.company + ')' : ''}\n${data.email}`;
+    const body = `${data.message}\n\n${f.steps[0]} ${data.need}\n${f.budget}: ${data.budget}\n\n— ${data.name}${data.company ? ' (' + data.company + ')' : ''}\n${data.email}`;
     location.href = `mailto:${site.email}?subject=${encodeURIComponent(f.title + ' – ' + data.name)}&body=${encodeURIComponent(body)}`;
     return;
   }
@@ -375,16 +395,19 @@ $('.js-lang').addEventListener('click', (e) => {
   setLangStored(lang);
   applyLang(lang);
   setActive(activeProject);
-  aboutStep = -2;
+  Object.keys(shownIndex).forEach((k) => (shownIndex[k] = -2));
   tick();
+  showStep(step, false);
   stage?.setContactSheet(contactSheet(isMobile()));
+  stage?.setTexts(swarmTexts());
+  stage?.glitch(1);
   update(lenis.scroll, 0);
 });
 
 /* ---------------------------------------------------------------------------
-   Pointer → giant (head follows, sheet can be tapped)
+   Pointer → avatar (head follows, poster can be tapped)
    --------------------------------------------------------------------------- */
-const UI = 'a, button, input, textarea, label, .menu, .project, .modal';
+const UI = 'a, button, input, textarea, label, .work__card, .menu, .project, .modal';
 const ndc = (e) => [(e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1];
 addEventListener('pointermove', (e) => {
   if (!stage) return;
@@ -415,7 +438,7 @@ function hasWebGL2() {
 async function boot() {
   preloader.set(0.08);
   await document.fonts.ready;
-  await Promise.all([document.fonts.load('900 100px "Doto"'), document.fonts.load('640 100px "Geist Variable"'), document.fonts.load('500 20px "Geist Mono"')]).catch(() => {});
+  await Promise.all(['900 100px "Doto"', '900 100px "Geist Variable"', '640 100px "Geist Variable"', '500 20px "Geist Mono"'].map((f) => document.fonts.load(f))).catch(() => {});
   preloader.set(0.2);
 
   if (!hasWebGL2()) {
@@ -429,10 +452,13 @@ async function boot() {
         projects,
         sheets: projects.map((p) => `${BASE}projects/${p.slug}/${mobile ? 'm.jpg' : p.images[0]}`),
         contactSheet: contactSheet(mobile),
-        name: site.nameLines,
-        face: `${BASE}face.jpg`,
+        words: site.wallWords,
+        photo: `${BASE}avatar.jpg`,
+        texts: swarmTexts(),
         mobile,
         reducedMotion: reduced,
+        instant: debug, // ?debug: skip the print-in so screenshots are deterministic
+        hq: new URLSearchParams(location.search).has('hq'),
         onProgress: (p) => preloader.set(0.2 + p * 0.78),
       });
       stage.onActive = (i) => setActive(i);
@@ -452,7 +478,7 @@ async function boot() {
   $$('.sec--hero .js-reveal').forEach((el, i) => {
     el.animate([{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], {
       duration: 900,
-      delay: 900 + i * 120,
+      delay: 1100 + i * 120,
       easing: 'cubic-bezier(.22,1,.36,1)',
       fill: 'backwards',
     });

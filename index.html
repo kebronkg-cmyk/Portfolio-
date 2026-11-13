@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="de" data-scene="white">
+<html lang="de" data-scene="black">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#fbf7f5" />
-    <title>Portfolio</title>
+    <meta name="theme-color" content="#070708" />
+    <meta name="color-scheme" content="dark" />
+    <title>Kebron — Developer & Designer</title>
     <meta name="description" content="" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="og.jpg" />
@@ -15,17 +16,15 @@
   <body class="is-loading">
     <a class="skip-link" href="#work" data-i18n="skip"></a>
 
-    <div class="stage" aria-hidden="true">
-      <canvas id="gl"></canvas>
-    </div>
+    <div class="stage" aria-hidden="true"><canvas id="gl"></canvas></div>
 
     <div class="preloader" role="status" aria-live="polite">
       <div class="preloader__count"><span class="js-count">000</span></div>
-      <div class="preloader__bar"><span class="js-bar"></span></div>
+      <div class="preloader__bar"><span></span></div>
     </div>
 
     <header class="header">
-      <a class="header__logo js-name" href="#top"></a>
+      <a class="header__logo js-logo" href="#top"></a>
       <nav class="header__right" aria-label="Primär">
         <div class="lang js-lang" role="group" aria-label="Sprache"></div>
         <button class="header__cta js-form-open"><i aria-hidden="true"></i><span data-i18n="cta"></span></button>
@@ -34,7 +33,7 @@
     </header>
 
     <main id="top" class="scroller">
-      <!-- HERO -->
+      <!-- 1 · HERO -->
       <section class="sec sec--hero" data-section="hero" style="--len: 170">
         <div class="sticky">
           <div class="hero">
@@ -44,14 +43,24 @@
             </div>
             <div class="hero__right js-reveal">
               <p class="hero__text" data-i18n="heroText"></p>
-              <button class="btn js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
+              <div class="hero__actions">
+                <button class="btn js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
+                <a class="btn btn--line" href="#work"><span data-i18n="heroSecondary"></span></a>
+              </div>
             </div>
-            <div class="hero__scroll js-reveal" aria-hidden="true"><span data-i18n="scrollHint"></span><i></i></div>
+            <div class="hero__scroll js-reveal" aria-hidden="true"><i></i><span data-i18n="scrollHint"></span></div>
           </div>
         </div>
       </section>
 
-      <!-- WORK -->
+      <!-- 2 · PITCH: the swarm writes the words, one sentence underneath -->
+      <section class="sec sec--pitch" data-section="pitch" style="--len: 300">
+        <div class="sticky">
+          <div class="pitch js-pitch"></div>
+        </div>
+      </section>
+
+      <!-- 3 · WORK -->
       <section id="work" class="sec sec--work" data-section="work">
         <div class="sticky">
           <div class="work">
@@ -61,6 +70,7 @@
               <ol class="work__list js-work-list"></ol>
             </div>
             <article class="work__card js-work-ui js-work-card" aria-live="polite">
+              <img class="work__thumb js-card-thumb" alt="" loading="lazy" />
               <h2 class="work__name js-card-title"></h2>
               <p class="label js-card-kind"></p>
               <p class="work__info js-card-info"></p>
@@ -70,36 +80,26 @@
         </div>
       </section>
 
-      <!-- ABOUT -->
-      <section id="about" class="sec sec--about" data-section="about" style="--len: 340">
+      <!-- 4 · WHO FOR -->
+      <section id="sectors" class="sec sec--sectors" data-section="sectors">
         <div class="sticky">
-          <div class="about">
-            <article class="about__step" data-step="0">
-              <p class="label"><b>01</b> <span class="js-about-label"></span></p>
-              <h2 class="about__title" data-i18n="approachTitle"></h2>
-              <p class="about__text" data-i18n="approachText"></p>
-            </article>
-            <article class="about__step" data-step="1">
-              <p class="label"><b>02</b> <span class="js-about-label"></span></p>
-              <h2 class="about__title" data-i18n="sectorsTitle"></h2>
-              <ul class="rows js-sectors"></ul>
-            </article>
-            <article class="about__step" data-step="2">
-              <p class="label"><b>03</b> <span class="js-about-label"></span></p>
-              <h2 class="about__title" data-i18n="processTitle"></h2>
-              <ol class="rows rows--num js-process"></ol>
-            </article>
-          </div>
+          <div class="steps js-sectors"></div>
         </div>
       </section>
 
-      <!-- CONTACT -->
-      <section id="contact" class="sec sec--contact" data-section="contact" style="--len: 230">
+      <!-- 5 · PROCESS -->
+      <section id="process" class="sec sec--process" data-section="process" style="--len: 300">
+        <div class="sticky">
+          <div class="steps js-process"></div>
+        </div>
+      </section>
+
+      <!-- 6 · CONTACT -->
+      <section id="contact" class="sec sec--contact" data-section="contact" style="--len: 240">
         <div class="sticky">
           <h2 class="sr-only js-contact-title"></h2>
           <div class="contact js-contact">
-            <button class="btn btn--rose btn--lg js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
-            <p class="contact__mail"><span data-i18n="orEmail"></span> <a class="js-email" href="#"></a></p>
+            <button class="btn btn--lg js-form-open"><span data-i18n="cta"></span><i class="arrow" aria-hidden="true"></i></button>
           </div>
           <footer class="footer js-footer">
             <ul class="footer__social js-socials"></ul>
@@ -107,7 +107,7 @@
             <div class="footer__legal">
               <a href="impressum.html" data-i18n="imprint"></a>
               <a href="datenschutz.html" data-i18n="privacy"></a>
-              <span>© <span class="js-year"></span> <span class="js-fullname"></span></span>
+              <span>© <span class="js-year"></span> <span class="js-logo-text"></span></span>
             </div>
           </footer>
         </div>
@@ -155,7 +155,7 @@
       </div>
     </div>
 
-    <!-- Contact form -->
+    <!-- Contact form: three quick steps -->
     <div class="modal js-form-modal" aria-hidden="true" role="dialog" aria-modal="true">
       <form class="form js-form" novalidate>
         <div class="form__head">
@@ -168,13 +168,11 @@
           <legend class="step__title js-step-title"></legend>
           <div class="form__chips form__chips--big js-needs"></div>
         </fieldset>
-
         <fieldset class="step" data-step="1">
           <legend class="step__title js-step-title"></legend>
           <label><span data-i18n="form.message"></span><textarea name="message" rows="3"></textarea></label>
           <div class="form__group"><span class="form__cap" data-i18n="form.budget"></span><div class="form__chips js-budgets"></div></div>
         </fieldset>
-
         <fieldset class="step" data-step="2">
           <legend class="step__title js-step-title"></legend>
           <label><span data-i18n="form.name"></span><input name="name" required autocomplete="name" /></label>

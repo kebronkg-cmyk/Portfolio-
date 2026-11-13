@@ -2,15 +2,16 @@
    CONTENT — alles, was du ändern willst, steht hier.
    --------------------------------------------------------------------------
    • Texte sind zweisprachig (de / en). Nur eine Sprache? → `languages: ['de']`
-   • ⟨TODO⟩ = bitte prüfen / ersetzen (siehe BRIEFING.md)
-   • Projektbilder liegen unter /public/projects/<slug>/
-       01.jpg = Blatt am Desktop (quer) · m.jpg = Blatt am Handy (hoch)
+   • ⟨TODO⟩ = bitte prüfen
+   • Projektbilder: /public/projects/<slug>/
+       01.jpg = Plakat am Desktop (quer) · m.jpg = Plakat am Handy (hoch)
+   • Avatar: /public/avatar.jpg (dein Bild, als Helligkeitskarte)
    ========================================================================== */
 
 export const site = {
-  // Die großen Wörter hinter der Figur, untereinander
-  nameLines: ['KEBRON', 'DEVELOPER', 'DESIGNER'],
-  fullName: 'Kebron.g', // Logo oben links
+  // Die großen Wörter an der Wand hinter dir
+  wallWords: ['KEBRON', 'DEVELOPER', 'DESIGNER'],
+  logo: 'Kebron.g',
   email: 'kebron.kg@gmail.com',
   // Formular-Backend (z. B. https://formspree.io). Leer = Formular öffnet das Mailprogramm.
   formEndpoint: '',
@@ -19,7 +20,7 @@ export const site = {
   defaultLanguage: 'de',
   timezone: 'Europe/Berlin',
   socials: [
-    { label: 'Instagram', url: 'https://www.instagram.com/' }, // ⟨TODO⟩
+    { label: 'Instagram', url: 'https://www.instagram.com/' }, // ⟨TODO⟩ dein Profil
     { label: 'LinkedIn', url: '' },
     { label: 'GitHub', url: 'https://github.com/kebronkg-cmyk' },
   ],
@@ -27,50 +28,54 @@ export const site = {
 
 export const copy = {
   de: {
-    metaTitle: `${site.fullName} — Webdesign, das Anfragen bringt`,
+    metaTitle: 'Kebron — Developer & Designer. Websites, an denen man hängen bleibt.',
     metaDescription:
-      'Webdesign & Entwicklung aus München. Maßgeschneiderte Websites für Gastronomie, Salons, Praxen, Kunst und Tech – eigenständig im Auftritt, gebaut für Anfragen.',
+      'Kebron baut Websites aus einer Hand: Design, Code und ein klarer Weg zur Anfrage. Für Gastronomie, Salons, Praxen, Kunst und Tech. München.',
     skip: 'Zum Inhalt springen',
     cta: 'Projekt anfragen',
     menu: 'Menü',
     close: 'Schließen',
-    role: 'Webdesign & Entwicklung — München', // ⟨TODO⟩ Standort prüfen
-    heroTitle: 'Ich baue Websites, die man sich merkt. Und die Kundschaft bringen.',
-    heroText: 'Kein Baukasten, keine Vorlage. Jede Seite entsteht für genau ein Geschäft – und für das, was sie dort leisten soll.',
+    role: 'Developer & Designer — München', // ⟨TODO⟩ Standort prüfen
+    heroTitle: 'Websites, an denen man hängen bleibt.',
+    heroText: 'Design und Code aus einer Hand. Für Marken, die im Netz mehr wollen, als bloß vorhanden zu sein.',
+    heroSecondary: 'Arbeiten ansehen',
     scrollHint: 'Scrollen',
 
+    // Aussage: Partikel formen die Wörter, darunter steht je ein Satz
+    pitch: [
+      { words: ['SCHÖN', 'REICHT NICHT.'], line: 'Eine hübsche Seite, die keiner findet, verkauft nichts.' },
+      { words: ['SCHNELL', 'AUCH NICHT.'], line: 'Eine schnelle Seite, an die sich keiner erinnert, auch nicht.' },
+      { words: ['ICH BAUE', 'BEIDES.'], line: 'Auftritt, Technik und ein klarer Weg zur Anfrage – in einer Seite.' },
+    ],
+
     workLabel: 'Arbeiten',
-    workHint: 'Blatt antippen zum Ansehen',
     view: 'Ansehen',
     visit: 'Live ansehen',
     image: 'Bild',
 
-    aboutLabel: ['Ansatz', 'Für wen', 'Ablauf'],
-    approachTitle: 'Schön allein verkauft nichts. Schnell allein vergisst man.',
-    approachText: 'Ich baue beides in eine Seite: einen Auftritt, der nach dir aussieht, Technik, die auf jedem Handy sofort da ist, und einen klaren Weg zur Anfrage.',
-    sectorsTitle: 'Für jedes Geschäft eine eigene Seite.',
+    sectorsLabel: 'Für wen',
     sectors: [
-      ['Gastronomie', 'Tische füllen, nicht nur die Karte zeigen.'],
-      ['Salons & Beauty', 'Termine, bevor jemand weiterscrollt.'],
-      ['Praxis & Coaching', 'Vertrauen, noch vor dem ersten Gespräch.'],
-      ['Kunst & Kultur', 'Eine Bühne, die nach dir aussieht.'],
-      ['Tech & Start-ups', 'Ein komplexes Produkt, in Sekunden verstanden.'],
-    ],
-    processTitle: 'In drei Schritten online.',
-    process: [
-      ['Kennenlernen', 'Ein kurzes Gespräch: Ziel, Zielgruppe, Rahmen.'],
-      ['Entwurf', 'Du siehst früh eine klickbare Richtung und redest mit.'],
-      ['Launch', 'Die Seite geht live – und ich bleibe ansprechbar.'],
+      { word: 'GASTRO', name: 'Gastronomie', title: 'Tische füllen, nicht nur die Karte zeigen.', text: 'Reservierung und Anruf mit einem Tipp, Karte und Öffnungszeiten ohne Suchen. Gebaut für Gäste, die jetzt Hunger haben.' },
+      { word: 'BEAUTY', name: 'Salons & Beauty', title: 'Termine, bevor jemand weiterscrollt.', text: 'Leistungen, Preise und Standorte auf einen Blick, die Buchung direkt daneben. Der Look deines Salons, übersetzt ins Netz.' },
+      { word: 'PRAXIS', name: 'Praxis & Coaching', title: 'Vertrauen, noch vor dem ersten Gespräch.', text: 'Ruhige, klare Seiten für Therapie, Heilarbeit und Beratung, die den Schritt zum Kennenlernen leicht machen.' },
+      { word: 'KUNST', name: 'Kunst & Kultur', title: 'Eine Bühne, die nach dir aussieht.', text: 'Für Künstler:innen, Musik und Kollektive: Seiten mit eigener Handschrift, Bewegung und Raum fürs Werk.' },
+      { word: 'TECH', name: 'Tech & Start-ups', title: 'Ein komplexes Produkt, in Sekunden verstanden.', text: 'Landingpages mit Motion und 3D, die erklären, überzeugen und zur Demo führen.' },
     ],
 
+    processLabel: 'Ablauf',
+    process: [
+      { word: '01', title: 'Kennenlernen', text: 'Ein kurzes Gespräch: Was soll die Seite erreichen, für wen, in welchem Rahmen?' },
+      { word: '02', title: 'Entwurf', text: 'Du siehst früh eine klickbare Richtung und redest mit, bevor etwas fertig ist.' },
+      { word: '03', title: 'Launch', text: 'Die Seite geht online: schnell, mobil sauber, bereit für Anfragen. Ich bleibe ansprechbar.' },
+    ],
+
+    contactLabel: 'Kontakt',
     contactTitle: ['Erzähl mir von', 'deinem Projekt.'],
     contactSub: 'Ein paar Angaben genügen. Ich antworte persönlich.',
-    contactHint: 'Blatt antippen',
-    orEmail: 'Oder direkt per Mail:',
     scrollBack: 'Nach oben',
     imprint: 'Impressum',
     privacy: 'Datenschutz',
-    nav: ['Start', 'Arbeiten', 'Ansatz', 'Kontakt'],
+    nav: ['Start', 'Arbeiten', 'Für wen', 'Ablauf', 'Kontakt'],
     statusLabel: 'Status',
     status: 'Nimmt Projekte an', // ⟨TODO⟩
     timeLabel: 'Ortszeit',
@@ -82,7 +87,6 @@ export const copy = {
       name: 'Name',
       email: 'E-Mail',
       company: 'Unternehmen / Marke (optional)',
-      need: 'Was brauchst du?',
       needs: ['Neue Website', 'Relaunch', 'Online-Shop', 'Branding', 'Noch unklar'],
       budget: 'Budget',
       budgets: ['bis 2.000 €', '2.000–5.000 €', '5.000–10.000 €', '10.000 € +', 'noch offen'], // ⟨TODO⟩
@@ -95,50 +99,53 @@ export const copy = {
   },
 
   en: {
-    metaTitle: `${site.fullName} — Web design that brings in enquiries`,
+    metaTitle: 'Kebron — Developer & Designer. Websites people get stuck on.',
     metaDescription:
-      'Web design & development from Munich. Tailor-made websites for restaurants, salons, practices, art and tech – distinctive to look at, built for enquiries.',
+      'Kebron builds websites end to end: design, code and a clear path to the enquiry. For restaurants, salons, practices, art and tech. Munich.',
     skip: 'Skip to content',
     cta: 'Start a project',
     menu: 'Menu',
     close: 'Close',
-    role: 'Web design & development — Munich',
-    heroTitle: 'I build websites people remember. And that bring in customers.',
-    heroText: 'No site builder, no template. Every site is made for exactly one business – and for what it has to do there.',
+    role: 'Developer & Designer — Munich',
+    heroTitle: 'Websites people get stuck on.',
+    heroText: 'Design and code from one hand. For brands that want more from the web than simply being there.',
+    heroSecondary: 'See the work',
     scrollHint: 'Scroll',
 
+    pitch: [
+      { words: ['PRETTY', 'IS NOT ENOUGH.'], line: 'A pretty site nobody finds sells nothing.' },
+      { words: ['NEITHER', 'IS FAST.'], line: 'A fast site nobody remembers doesn’t either.' },
+      { words: ['I BUILD', 'BOTH.'], line: 'Presence, engineering and a clear path to the enquiry – in one site.' },
+    ],
+
     workLabel: 'Work',
-    workHint: 'Tap the sheet to view',
     view: 'View',
     visit: 'Visit live',
     image: 'Image',
 
-    aboutLabel: ['Approach', 'Who for', 'Process'],
-    approachTitle: 'Pretty alone sells nothing. Fast alone is forgotten.',
-    approachText: 'I build both into one site: a presence that looks like you, engineering that is instantly there on every phone, and a clear path to the enquiry.',
-    sectorsTitle: 'A site of its own for every business.',
+    sectorsLabel: 'Who for',
     sectors: [
-      ['Restaurants', 'Fill tables, don’t just show the menu.'],
-      ['Salons & beauty', 'Appointments before anyone scrolls on.'],
-      ['Practice & coaching', 'Trust, before the first conversation.'],
-      ['Art & culture', 'A stage that looks like you.'],
-      ['Tech & start-ups', 'A complex product, understood in seconds.'],
-    ],
-    processTitle: 'Online in three steps.',
-    process: [
-      ['Intro', 'A short call: goal, audience, frame.'],
-      ['Draft', 'You see a clickable direction early and have a say.'],
-      ['Launch', 'The site goes live – and I stay reachable.'],
+      { word: 'FOOD', name: 'Restaurants', title: 'Fill tables, don’t just show the menu.', text: 'Booking and calling in one tap, menu and opening hours without searching. Built for guests who are hungry now.' },
+      { word: 'BEAUTY', name: 'Salons & beauty', title: 'Appointments before anyone scrolls on.', text: 'Services, prices and locations at a glance, booking right next to them. The look of your salon, translated to the web.' },
+      { word: 'CARE', name: 'Practice & coaching', title: 'Trust, before the first conversation.', text: 'Calm, clear sites for therapy, healing work and consulting that make the first step easy.' },
+      { word: 'ART', name: 'Art & culture', title: 'A stage that looks like you.', text: 'For artists, music and collectives: sites with their own signature, motion and room for the work.' },
+      { word: 'TECH', name: 'Tech & start-ups', title: 'A complex product, understood in seconds.', text: 'Landing pages with motion and 3D that explain, convince and lead to the demo.' },
     ],
 
+    processLabel: 'Process',
+    process: [
+      { word: '01', title: 'Intro', text: 'A short call: what should the site achieve, for whom, within what frame?' },
+      { word: '02', title: 'Draft', text: 'You see a clickable direction early and have a say before anything is finished.' },
+      { word: '03', title: 'Launch', text: 'The site goes online: fast, clean on mobile, ready for enquiries. I stay reachable.' },
+    ],
+
+    contactLabel: 'Contact',
     contactTitle: ['Tell me about', 'your project.'],
     contactSub: 'A few details are enough. I reply personally.',
-    contactHint: 'Tap the sheet',
-    orEmail: 'Or email me directly:',
     scrollBack: 'Back to top',
     imprint: 'Imprint',
     privacy: 'Privacy',
-    nav: ['Home', 'Work', 'Approach', 'Contact'],
+    nav: ['Home', 'Work', 'Who for', 'Process', 'Contact'],
     statusLabel: 'Status',
     status: 'Taking on projects',
     timeLabel: 'Local time',
@@ -150,7 +157,6 @@ export const copy = {
       name: 'Name',
       email: 'Email',
       company: 'Company / brand (optional)',
-      need: 'What do you need?',
       needs: ['New website', 'Relaunch', 'Online shop', 'Branding', 'Not sure yet'],
       budget: 'Budget',
       budgets: ['up to €2,000', '€2,000–5,000', '€5,000–10,000', '€10,000 +', 'open'],
@@ -176,7 +182,7 @@ export const projects = [
     url: 'https://antica-pizza.pages.dev/',
     images: ['01.jpg', '02.jpg', '03.jpg'],
     info: {
-      de: 'Die Pizza spielt die Hauptrolle: Sie dreht sich durchs Sortiment, Karte und Anruf bleiben immer einen Tipp entfernt.',
+      de: 'Die Pizza spielt die Hauptrolle: Sie dreht sich durchs Sortiment, Karte und Anruf bleiben einen Tipp entfernt.',
       en: 'The pizza plays the lead: it spins through the range while menu and phone stay one tap away.',
     },
   },

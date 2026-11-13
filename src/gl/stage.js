@@ -88,7 +88,8 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
 
   // ---- textures
   const loader = new TextureLoader();
-  const load = (src) =>
+  // a server can hiccup (e.g. right after a deploy): try each picture up to three times
+  const load = (src, tries = 3) =>
     new Promise((res) =>
       loader.load(
         src,
@@ -100,7 +101,7 @@ export async function createStage({ canvas, projects, sheets, contactSheet, word
           res(t);
         },
         undefined,
-        () => res(null),
+        () => (tries > 1 ? setTimeout(() => load(src + (src.includes('?') ? '&' : '?') + 'r=' + tries, tries - 1).then(res), 700) : res(null)),
       ),
     );
   const [photoTex, bodyTex, ...texes] = await Promise.all([load(photo), load(body), ...sheets.map(load)]);

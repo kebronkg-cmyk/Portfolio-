@@ -408,18 +408,34 @@ $('.js-lang').addEventListener('click', (e) => {
    Pointer → avatar (head follows, poster can be tapped)
    --------------------------------------------------------------------------- */
 const UI = 'a, button, input, textarea, label, .work__card, .menu, .project, .modal';
-const ndc = (e) => [(e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1];
-addEventListener('pointermove', (e) => {
-  if (!stage) return;
-  const [x, y] = ndc(e);
-  stage.setPointer(x, y);
-  const hit = e.target.closest(UI) ? null : stage.pick(x, y);
+const ndc = (x, y) => [(x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1];
+const mouse = { x: -1, y: -1, on: false };
+/* What is under the pointer right now? Re-checked while scrolling too, because the
+   poster moves under a resting mouse. */
+function refreshHover() {
+  if (!stage || !mouse.on) return;
+  const el = document.elementFromPoint(mouse.x, mouse.y);
+  const hit = !el || el.closest(UI) ? null : stage.pick(...ndc(mouse.x, mouse.y));
   stage.setHovered(hit !== null);
   cursor.setLabel(hit === null ? '' : hit === 'contact' ? t(lang, 'cta') : t(lang, 'view'));
+}
+addEventListener('pointermove', (e) => {
+  if (!stage) return;
+  stage.setPointer(...ndc(e.clientX, e.clientY));
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  mouse.on = e.pointerType === 'mouse';
+  refreshHover();
 });
+document.addEventListener('pointerleave', () => {
+  mouse.on = false;
+  stage?.setHovered(false);
+  cursor.setLabel('');
+});
+setInterval(refreshHover, 160);
 addEventListener('click', (e) => {
   if (!stage || e.target.closest(UI)) return;
-  const hit = stage.pick(...ndc(e));
+  const hit = stage.pick(...ndc(e.clientX, e.clientY));
   if (hit === 'contact') modal.open();
   else if (hit !== null) openProject(hit);
 });

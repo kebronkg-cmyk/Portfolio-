@@ -1,63 +1,31 @@
-# Briefing – was ich von dir brauche
+# Briefing – was noch von dir kommt
 
-> Stand: erste Iteration. Die Seite läuft komplett mit Platzhaltern.
-> Alles unten Genannte ersetzt die Platzhalter – die meisten Punkte sind
-> nur ein Eintrag in `src/content.js` oder eine Datei in `public/`.
+Stand: Version 5 (Schwarz/Pink, du als Avatar). Alles Folgende steht in
+`src/content.js` oder ist eine Datei in `public/`.
 
-## 1. Pflicht (ohne das geht's nicht live)
+## Offen
 
-| # | Was | Wohin | Hinweis |
-|---|-----|-------|---------|
-| 1 | **Dein Name** (so wie er groß im Hero stehen soll) | `site.name` | Aktuell steht da „KEBRON K.“ – geraten aus deinem GitHub-Namen. |
-| 2 | **Was du machst** (1 Satz, Positionierung) | `heroLine` (de/en) | z. B. „Designer & Developer für Marken, die auffallen wollen“. |
-| 3 | **E-Mail-Adresse** für Anfragen | `site.email` | |
-| 4 | **Porträtfoto** | `public/portrait.jpg` | Siehe Foto-Guide unten – das ist das wichtigste Asset. |
-| 5 | **3–6 Projekte** mit Titel, Jahr, 1–3 Sätzen, Rolle, ggf. Link | `projects` | Mehr als 6 wird lang – lieber kuratieren. |
-| 6 | **Projektbilder** (2–6 pro Projekt) | `public/projects/<slug>/` | Siehe Bild-Guide unten. |
-| 7 | **Impressum-Daten** (Name, Anschrift, ggf. USt-ID) | `impressum.html` | In DE Pflicht, sobald die Seite geschäftlich ist. |
+| # | Was | Wohin |
+|---|-----|-------|
+| 1 | **Formular-Versand**: kostenloser Zugang bei formspree.io, die Adresse von dort eintragen. Bis dahin öffnet „Anfrage senden“ dein Mailprogramm. | `site.formEndpoint` |
+| 2 | **Instagram-/LinkedIn-Link** (aktuell nur Platzhalter-Adresse) | `site.socials` |
+| 3 | **Erlaubnis für die vier gezeigten Seiten**: Darfst du Antica, Weg der vier Winde, Irmonhair und Omer’s Hair öffentlich als Arbeiten zeigen? | `projects` |
+| 4 | **Standort** „München“ stimmt? | `role` (de/en) |
+| 5 | **Budget-Stufen** im Formular passen zu deinen Preisen? | `form.budgets` |
+| 6 | **Status** „Nimmt Projekte an“ aktuell halten | `status` |
+| 7 | **Impressum und Datenschutz** ausfüllen (in Deutschland Pflicht) | `impressum.html`, `datenschutz.html` |
+| 8 | **Eigene Domain** und später eine Mail-Adresse darauf | – |
 
-## 2. Wichtig für den Feinschliff
+## Bilder austauschen
 
-- **Social-Links** (Instagram, LinkedIn, Behance, GitHub, X …) → `site.socials`
-- **Über-mich-Texte**: Wer bist du, mit wem arbeitest du, was machst du → `aboutTitle/aboutText/clientsText/services`
-- **Sprache**: Nur Deutsch, nur Englisch oder beides? (aktuell: beides mit Umschalter)
-- **Status im Menü**: „offen für Projekte“ / „ausgebucht bis …“, Standort
-- **Formular**: Soll das Formular wirklich Mails verschicken? Dann einen kostenlosen
-  Account bei [formspree.io](https://formspree.io) anlegen und die Endpoint-URL bei
-  `site.formEndpoint` eintragen. Ohne Endpoint öffnet das Formular dein Mailprogramm.
-- **Domain**: Hast du schon eine (z. B. `deinname.de`)? Dann richte ich die ein.
-- **Farbakzent**: Aktuell „Signal-Lime“ `#c6ff3d`. Wenn du eine Markenfarbe hast → sag Bescheid.
+- **Avatar**: `public/avatar.jpg` (577 × 1024, Graustufen). Das Bild wird von vorn auf Kopf und
+  Oberkörper gelegt. Ein neues Bild muss denselben Ausschnitt haben (Augen bei x 300 / y 262,
+  Ohr zu Ohr ca. 180 px), sonst sitzt das Gesicht schief – sag mir Bescheid, ich richte es aus.
+- **Projekte**: `public/projects/<slug>/01.jpg` (quer, 1600 × 1000) ist das Plakat am Desktop,
+  `m.jpg` (hoch, 780 × 1300) das Plakat am Handy, `02.jpg`, `03.jpg` … erscheinen in der Galerie.
 
-## 3. Foto-Guide (Hero-Porträt)
+## Texte
 
-Das Foto wird in ein Raster aus leuchtenden Punkten zerlegt (Helligkeit → Punktgröße
-und Tiefe). Damit das richtig gut aussieht:
-
-- **Brustbild / Büste**, Kopf + Schultern, frontal oder leicht seitlich (¾-Ansicht)
-- **Ruhiger, einfarbiger Hintergrund** – am besten **schwarz oder sehr dunkel**
-  (alternativ ganz weiß). Der Hintergrund wird automatisch herausgerechnet.
-- **Seitliches, hartes Licht** (eine Lichtquelle, z. B. Fenster von der Seite) –
-  Kontrast = Tiefe im Effekt. Flaches Licht wirkt im Punktraster flach.
-- Hochformat, mind. **1200 px** hoch, JPG oder PNG.
-- **Ideal**: PNG mit freigestelltem Hintergrund (transparent). Dann `portraitKeyOut: 'none'`.
-- Optional/Next Level: ein **kurzes Video (3–5 s, Kopf dreht sich leicht)** – dann
-  kann ich das Porträt animieren statt statisch (wie bei der Referenz).
-
-## 4. Bild-Guide (Projekte)
-
-- Format **16:10 oder 16:9**, mind. **1600 px** breit, JPG/WebP, je < 400 KB
-- Das **erste Bild** ist das Cover auf dem „Röhrenbildschirm“ im 3D-Raum → am besten
-  ein starker Website-Screenshot (Hero der Seite) mit großer Typo
-- Die weiteren Bilder erscheinen in der Projekt-Galerie (Detailansichten, Mobile-Screens,
-  Close-ups von Interaktionen)
-- Dateien z. B. `public/projects/mein-projekt/01.jpg`, `02.jpg` … und in `content.js`:
-  `images: ['01.jpg', '02.jpg']`
-
-## 5. Offene Fragen an dich
-
-1. Was genau ist dein Beruf / Angebot? (Webdesign? Development? Branding? Fotografie? Motion?)
-   – davon hängt ab, wie ich die Projekt-Sektion und die Texte zuspitze.
-2. Wer soll die Seite sehen? (Agenturen, Start-ups, Künstler:innen, Arbeitgeber?)
-3. Gibt es Projekte mit Videos? → Die Bildschirme können auch **Videos abspielen** (Loop).
-4. Brauchst du Unterseiten wie bei der Referenz (Articles, Tools, Credits)?
-5. Soll ich zusätzlich einen **Sound-Layer** (leises Röhren-Brummen, UI-Klicks, standardmäßig aus) einbauen?
+Alle Texte (Deutsch und Englisch) stehen in `src/content.js`:
+Wand-Wörter (`wallWords`), Aussagen (`pitch`), Branchen (`sectors`), Ablauf (`process`),
+Schild am Ende (`contactTitle`). Die Wörter, die die Partikel schreiben, stehen jeweils bei `words` bzw. `word`.
